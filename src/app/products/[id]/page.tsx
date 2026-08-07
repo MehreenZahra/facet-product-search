@@ -108,8 +108,9 @@ export default function ProductPage(props: PageProps) {
 
       {/* Main product grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-16">
-        {/* Image */}
-        <div className="bg-secondary rounded-2xl aspect-square flex items-center justify-center overflow-hidden border border-border">
+        {/* Image — sticky so it stays visible while scrolling the details */}
+        <div className="md:self-start md:sticky md:top-24">
+          <div className="bg-secondary rounded-2xl aspect-square flex items-center justify-center overflow-hidden border border-border">
           {product.imageUrl && !imageError ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -126,6 +127,7 @@ export default function ProductPage(props: PageProps) {
               </span>
             </div>
           )}
+          </div>
         </div>
 
         {/* Details */}
