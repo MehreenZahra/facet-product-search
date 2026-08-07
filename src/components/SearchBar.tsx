@@ -1,30 +1,29 @@
 "use client";
 
-import { ChangeEvent } from "react";
+import { ChangeEvent, forwardRef } from "react";
+import { Search } from "lucide-react";
 
 interface SearchBarProps {
   value: string;
   onChange: (value: string) => void;
+  inputRef?: React.RefObject<HTMLInputElement | null>;
 }
 
-export function SearchBar({ value, onChange }: SearchBarProps) {
+export function SearchBar({ value, onChange, inputRef }: SearchBarProps) {
   return (
-    <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-      <label
-        className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-        htmlFor="search"
-      >
-        Search products
-      </label>
+    <div className="relative">
+      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+        <Search className="h-4 w-4 text-muted-foreground" />
+      </div>
       <input
-        id="search"
-        className="w-full rounded-2xl border border-zinc-200 bg-zinc-50 p-3 text-sm text-zinc-900 outline-none transition hover:border-zinc-300 focus-visible:border-sky-500 focus-visible:ring-2 focus-visible:ring-sky-100 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:border-zinc-700 dark:focus-visible:border-sky-400 dark:focus-visible:ring-sky-900"
+        ref={inputRef}
+        id="search-input"
+        className="block w-full rounded-md border border-input bg-background py-2 pl-9 pr-3 text-sm placeholder:text-muted-foreground outline-none transition focus:border-ring focus:ring-1 focus:ring-ring"
         type="search"
-        placeholder="Search by name, brand, tag, or benefit"
+        placeholder="Search catalog… (/)"
         value={value}
-        onChange={(event: ChangeEvent<HTMLInputElement>) =>
-          onChange(event.target.value)
-        }
+        onChange={(e: ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
+        data-testid="input-search"
       />
     </div>
   );

@@ -84,7 +84,16 @@ function processCSV() {
 
         // Field extraction
         const tagsRaw = row['TAGS'] || '';
-        const tags = tagsRaw.split(',').map((t: string) => t.trim()).filter((t: string) => t.length > 0);
+        const rawTagsArray = tagsRaw.split(',').map((t: string) => t.trim()).filter((t: string) => t.length > 0);
+        
+        const tags = rawTagsArray
+          .filter((t: string) => !t.includes('|'))
+          .map((t: string) => {
+            if (t.startsWith('filter:')) return t.replace('filter:', '');
+            if (t.startsWith('goal:')) return t.replace('goal:', '');
+            return t;
+          })
+          .filter((t: string, index: number, self: string[]) => self.indexOf(t) === index);
         
         const category = getDerivedCategory(row['PRODUCT_TYPE'], tags);
         

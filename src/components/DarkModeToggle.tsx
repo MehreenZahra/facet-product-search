@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Moon, Sun } from "lucide-react";
 
 export default function DarkModeToggle() {
   const [isDark, setIsDark] = useState<boolean | null>(null);
@@ -18,9 +19,7 @@ export default function DarkModeToggle() {
         setIsDark(false);
         return;
       }
-      const prefersDark =
-        window.matchMedia &&
-        window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const prefersDark = window.matchMedia?.("(prefers-color-scheme: dark)").matches;
       if (prefersDark) {
         document.documentElement.classList.add("dark");
         setIsDark(true);
@@ -28,7 +27,7 @@ export default function DarkModeToggle() {
         document.documentElement.classList.remove("dark");
         setIsDark(false);
       }
-    } catch (e) {
+    } catch {
       setIsDark(false);
     }
   }, []);
@@ -44,20 +43,19 @@ export default function DarkModeToggle() {
         document.documentElement.classList.remove("dark");
         localStorage.setItem("theme", "light");
       }
-    } catch (e) {
-      /* ignore */
-    }
+    } catch { /* ignore */ }
   }
+
+  if (isDark === null) return <div className="w-9 h-9" />;
 
   return (
     <button
-      aria-pressed={!!isDark}
       onClick={toggle}
-      className="inline-flex items-center gap-2 rounded-full border px-3 py-2 text-sm bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
-      title="Toggle dark mode"
+      className="inline-flex items-center justify-center rounded-md w-9 h-9 text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      aria-label="Toggle theme"
+      title={isDark ? "Switch to light mode" : "Switch to dark mode"}
     >
-      <span className="text-lg">{isDark ? "🌙" : "☀️"}</span>
-      <span className="hidden sm:inline">{isDark ? "Dark" : "Light"}</span>
+      {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
     </button>
   );
 }
