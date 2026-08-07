@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useFilters } from "@/hooks/useFilters";
 import { SearchBar } from "@/components/SearchBar";
 import { SortSelect } from "@/components/SortSelect";
 import { ProductGrid } from "@/components/ProductGrid";
@@ -15,23 +16,36 @@ const PAGE_SIZE = 20;
 
 export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [query, setQuery] = useState("");
-  const [sort, setSort] = useState<
-    "relevance" | "price_asc" | "price_desc" | "name_asc" | "name_desc"
-  >("relevance");
-  const [page, setPage] = useState(1);
+  const {
+    state,
+    setQ,
+    setVendors,
+    setCategories,
+    setTags,
+    setMinPrice,
+    setMaxPrice,
+    setInStock,
+    setSort,
+    setPage,
+  } = useFilters();
   const [loading, setLoading] = useState(false);
   const [totalPages, setTotalPages] = useState(1);
-  const [selectedVendors, setSelectedVendors] = useState<string[]>([]);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [minPrice, setMinPrice] = useState<number | undefined>(undefined);
-  const [maxPrice, setMaxPrice] = useState<number | undefined>(undefined);
-  const [inStock, setInStock] = useState<boolean | undefined>(undefined);
-  const debouncedQuery = useDebounce(query, 300);
+  const debouncedQuery = useDebounce(state.q, 300);
 
   useEffect(() => {
+    // reset to first page when query or filters change
     setPage(1);
-  }, [debouncedQuery, sort]);
+  }, [
+    debouncedQuery,
+    state.sort,
+    state.vendors,
+    state.categories,
+    state.tags,
+    state.minPrice,
+    state.maxPrice,
+    state.inStock,
+    setPage,
+  ]);
 
   useEffect(() => {
     setLoading(true);
@@ -41,23 +55,30 @@ export default function Home() {
       searchParams.set("q", debouncedQuery);
     }
 
-    if (sort !== "relevance") {
-      searchParams.set("sort", sort);
+    if (state.sort && state.sort !== "relevance") {
+      searchParams.set("sort", state.sort);
     }
 
-    if (selectedVendors.length > 0) {
-      for (const v of selectedVendors) searchParams.append("vendors", v);
+    if (state.vendors.length > 0) {
+      state.vendors.forEach((v) => searchParams.append("vendors", v));
     }
 
-    if (selectedCategories.length > 0) {
-      for (const c of selectedCategories) searchParams.append("categories", c);
+    if (state.categories.length > 0) {
+      state.categories.forEach((c) => searchParams.append("categories", c));
     }
 
-    if (minPrice !== undefined) searchParams.set("minPrice", String(minPrice));
-    if (maxPrice !== undefined) searchParams.set("maxPrice", String(maxPrice));
-    if (inStock !== undefined) searchParams.set("inStock", String(inStock));
+    if (state.tags.length > 0) {
+      state.tags.forEach((t) => searchParams.append("tags", t));
+    }
 
-    searchParams.set("page", String(page));
+    if (state.minPrice !== undefined)
+      searchParams.set("minPrice", String(state.minPrice));
+    if (state.maxPrice !== undefined)
+      searchParams.set("maxPrice", String(state.maxPrice));
+    if (state.inStock !== undefined)
+      searchParams.set("inStock", String(state.inStock));
+
+    searchParams.set("page", String(state.page));
     searchParams.set("pageSize", String(PAGE_SIZE));
 
     fetch(`/api/products?${searchParams.toString()}`)
@@ -67,7 +88,17 @@ export default function Home() {
         setTotalPages(result.totalPages || 1);
       })
       .finally(() => setLoading(false));
-  }, [debouncedQuery, sort, page]);
+  }, [
+    debouncedQuery,
+    state.sort,
+    state.page,
+    state.vendors,
+    state.categories,
+    state.tags,
+    state.minPrice,
+    state.maxPrice,
+    state.inStock,
+  ]);
 
   return (
     <div className="min-h-screen bg-zinc-50 px-4 py-8 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 sm:px-6 lg:px-8">
@@ -87,19 +118,21 @@ export default function Home() {
 
         <div className="grid gap-6 xl:grid-cols-[320px_1fr]">
           <aside className="space-y-6 rounded-3xl bg-white p-6 shadow-sm dark:bg-zinc-900">
-            <SearchBar value={query} onChange={setQuery} />
-            <SortSelect value={sort} onChange={setSort} />
+            <SearchBar value={state.q} onChange={setQ} />
+            <SortSelect value={state.sort} onChange={(v) => setSort(v)} />
             <hr className="my-4 border-t border-zinc-100" />
             <FilterPanel
-              selectedVendors={selectedVendors}
-              setSelectedVendors={setSelectedVendors}
-              selectedCategories={selectedCategories}
-              setSelectedCategories={setSelectedCategories}
-              minPrice={minPrice}
+              selectedVendors={state.vendors}
+              setSelectedVendors={setVendors}
+              selectedCategories={state.categories}
+              setSelectedCategories={setCategories}
+              selectedTags={state.tags}
+              setSelectedTags={setTags}
+              minPrice={state.minPrice}
               setMinPrice={setMinPrice}
-              maxPrice={maxPrice}
+              maxPrice={state.maxPrice}
               setMaxPrice={setMaxPrice}
-              inStock={inStock}
+              inStock={state.inStock}
               setInStock={setInStock}
             />
           </aside>
@@ -113,7 +146,7 @@ export default function Home() {
               <ProductGrid products={products} />
             )}
             <Pagination
-              page={page}
+              page={state.page}
               totalPages={totalPages}
               onChange={setPage}
             />
