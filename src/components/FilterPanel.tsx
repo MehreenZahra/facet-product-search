@@ -52,7 +52,11 @@ export function FilterPanel({
       .catch(() => setTagsList([]));
   }, []);
 
-  function toggleItem(list: string[], setList: (s: string[]) => void, item: string) {
+  function toggleItem(
+    list: string[],
+    setList: (s: string[]) => void,
+    item: string,
+  ) {
     if (list.includes(item)) setList(list.filter((i) => i !== item));
     else setList([...list, item]);
   }
@@ -67,7 +71,9 @@ export function FilterPanel({
               <input
                 type="checkbox"
                 checked={selectedVendors.includes(v)}
-                onChange={() => toggleItem(selectedVendors, setSelectedVendors, v)}
+                onChange={() =>
+                  toggleItem(selectedVendors, setSelectedVendors, v)
+                }
               />
               <span className="truncate">{v}</span>
             </label>
@@ -83,7 +89,9 @@ export function FilterPanel({
               <input
                 type="checkbox"
                 checked={selectedCategories.includes(c)}
-                onChange={() => toggleItem(selectedCategories, setSelectedCategories, c)}
+                onChange={() =>
+                  toggleItem(selectedCategories, setSelectedCategories, c)
+                }
               />
               <span className="truncate">{c}</span>
             </label>
@@ -102,7 +110,8 @@ export function FilterPanel({
                 onChange={() => {
                   if (!setSelectedTags) return;
                   const current = selectedTags || [];
-                  if (current.includes(t)) setSelectedTags(current.filter((i: string) => i !== t));
+                  if (current.includes(t))
+                    setSelectedTags(current.filter((i: string) => i !== t));
                   else setSelectedTags([...current, t]);
                 }}
               />
@@ -120,14 +129,22 @@ export function FilterPanel({
             placeholder="Min"
             type="number"
             value={minPrice ?? ""}
-            onChange={(e) => setMinPrice(e.target.value === "" ? undefined : Number(e.target.value))}
+            onChange={(e) =>
+              setMinPrice(
+                e.target.value === "" ? undefined : Number(e.target.value),
+              )
+            }
           />
           <input
             className="w-1/2 rounded-2xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm dark:border-zinc-800 dark:bg-zinc-900"
             placeholder="Max"
             type="number"
             value={maxPrice ?? ""}
-            onChange={(e) => setMaxPrice(e.target.value === "" ? undefined : Number(e.target.value))}
+            onChange={(e) =>
+              setMaxPrice(
+                e.target.value === "" ? undefined : Number(e.target.value),
+              )
+            }
           />
         </div>
       </div>
@@ -135,7 +152,11 @@ export function FilterPanel({
       <div>
         <h3 className="mb-2 text-sm font-semibold">Availability</h3>
         <label className="flex items-center gap-2">
-          <input type="checkbox" checked={!!inStock} onChange={(e) => setInStock(e.target.checked ? true : undefined)} />
+          <input
+            type="checkbox"
+            checked={!!inStock}
+            onChange={(e) => setInStock(e.target.checked ? true : undefined)}
+          />
           <span className="text-sm">In stock only</span>
         </label>
       </div>
