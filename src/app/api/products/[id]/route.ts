@@ -1,12 +1,30 @@
+// import { NextRequest, NextResponse } from "next/server";
+// import { getProductStore } from "@/lib/product-store";
+
+// export async function GET(
+//   request: NextRequest,
+//   { params }: { params: { id: string } },
+// ) {
+//   const store = getProductStore();
+//   const product = store.getProductById(params.id);
+
+//   if (!product) {
+//     return NextResponse.json({ error: "Product not found" }, { status: 404 });
+//   }
+
+//   return NextResponse.json(product);
+// }
+
 import { NextRequest, NextResponse } from "next/server";
 import { getProductStore } from "@/lib/product-store";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
+  const { id } = await params;
   const store = getProductStore();
-  const product = store.getProductById(params.id);
+  const product = store.getProductById(id);
 
   if (!product) {
     return NextResponse.json({ error: "Product not found" }, { status: 404 });
