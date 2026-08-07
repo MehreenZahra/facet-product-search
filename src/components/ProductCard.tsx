@@ -4,6 +4,9 @@ import Link from "next/link";
 import { useState } from "react";
 import { Product } from "@/types/product";
 import { Package } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { formatCurrency } from "@/lib/utils";
 
 interface ProductCardProps {
   product: Product;
@@ -40,7 +43,7 @@ export function ProductCard({ product, searchQuery = "" }: ProductCardProps) {
   const extraTags = product.tags.length - 3;
 
   return (
-    <div className="overflow-hidden flex flex-col border border-border rounded-lg bg-card group hover:border-primary/40 hover:shadow-md transition-all duration-200 h-full">
+    <Card className="overflow-hidden flex flex-col group hover:border-primary/40 hover:shadow-md transition-all duration-200 h-full">
       {/* Image area */}
       <Link
         href={`/products/${product.id}`}
@@ -52,15 +55,15 @@ export function ProductCard({ product, searchQuery = "" }: ProductCardProps) {
         {/* Out-of-stock badge */}
         {isOutOfStock && (
           <div className="absolute top-2 right-2">
-            <span className="inline-flex items-center rounded px-2 py-0.5 text-[11px] font-semibold bg-destructive text-destructive-foreground shadow-sm">
+            <Badge variant="destructive" className="font-semibold text-[11px] shadow-sm">
               Out of Stock
-            </span>
+            </Badge>
           </div>
         )}
       </Link>
 
       {/* Card body */}
-      <div className="p-4 flex-1 flex flex-col gap-2">
+      <CardContent className="p-4 flex-1 flex flex-col gap-2">
         {/* Title + price */}
         <div className="flex items-start justify-between gap-2">
           <Link href={`/products/${product.id}`} className="hover:underline outline-none focus-visible:underline min-w-0">
@@ -69,7 +72,7 @@ export function ProductCard({ product, searchQuery = "" }: ProductCardProps) {
             </h3>
           </Link>
           <div className="font-bold whitespace-nowrap text-primary shrink-0 text-sm mt-0.5">
-            £{product.price.toFixed(2)}
+            {formatCurrency(product.price)}
           </div>
         </div>
 
@@ -88,22 +91,19 @@ export function ProductCard({ product, searchQuery = "" }: ProductCardProps) {
         {displayTags.length > 0 && (
           <div className="mt-auto pt-3 flex flex-wrap gap-1">
             {displayTags.map((tag) => (
-              <span
-                key={tag}
-                className="inline-flex items-center rounded-full bg-secondary text-secondary-foreground px-2 py-0.5 text-[10px] font-medium"
-              >
+              <Badge key={tag} variant="secondary" className="text-[10px] px-1.5 py-0 font-normal">
                 {tag}
-              </span>
+              </Badge>
             ))}
             {extraTags > 0 && (
-              <span className="inline-flex items-center rounded-full bg-secondary text-muted-foreground px-2 py-0.5 text-[10px] font-medium">
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-normal text-muted-foreground">
                 +{extraTags}
-              </span>
+              </Badge>
             )}
           </div>
         )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -111,20 +111,20 @@ export function ProductCard({ product, searchQuery = "" }: ProductCardProps) {
 
 export function ProductCardSkeleton() {
   return (
-    <div className="overflow-hidden flex flex-col border border-border rounded-lg bg-card h-full animate-pulse">
-      <div className="aspect-square bg-muted" />
-      <div className="p-4 flex-1 flex flex-col gap-3">
+    <Card className="overflow-hidden flex flex-col h-full">
+      <div className="aspect-square bg-muted animate-pulse" />
+      <CardContent className="p-4 flex-1 flex flex-col gap-3">
         <div className="flex justify-between gap-4">
-          <div className="h-5 bg-muted rounded flex-1" />
-          <div className="h-5 w-14 bg-muted rounded" />
+          <div className="h-5 bg-muted rounded animate-pulse flex-1" />
+          <div className="h-5 w-14 bg-muted rounded animate-pulse" />
         </div>
-        <div className="h-3 w-1/2 bg-muted rounded" />
+        <div className="h-3 w-1/2 bg-muted rounded animate-pulse" />
         <div className="mt-auto pt-3 flex gap-1.5">
-          <div className="h-4 w-10 bg-muted rounded" />
-          <div className="h-4 w-14 bg-muted rounded" />
-          <div className="h-4 w-10 bg-muted rounded" />
+          <div className="h-4 w-10 bg-muted rounded animate-pulse" />
+          <div className="h-4 w-14 bg-muted rounded animate-pulse" />
+          <div className="h-4 w-10 bg-muted rounded animate-pulse" />
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

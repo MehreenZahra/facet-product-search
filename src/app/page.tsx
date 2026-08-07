@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useFilters } from "@/hooks/useFilters";
 import { SearchBar } from "@/components/SearchBar";
@@ -8,12 +8,15 @@ import { SortSelect } from "@/components/SortSelect";
 import { ProductGrid } from "@/components/ProductGrid";
 import { FilterPanel } from "@/components/FilterPanel";
 import { ProductCardSkeleton } from "@/components/ProductCard";
-import { EmptyState } from "@/components/EmptyState";
 import { Product } from "@/types/product";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Filter,
   X,
   PackageX,
+  AlertCircle,
+  RefreshCcw,
   ArrowUpDown,
   ChevronLeft,
   ChevronRight,
@@ -60,6 +63,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [isPlaceholder, setIsPlaceholder] = useState(false);
   const [isError, setIsError] = useState(false);
+  const [retryKey, setRetryKey] = useState(0);
   const debouncedQuery = useDebounce(state.q, 300);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -133,6 +137,7 @@ export default function Home() {
     state.minPrice,
     state.maxPrice,
     state.inStock,
+    retryKey,
   ]);
 
   // ── Active filter count ───────────────────────────────────────────────────
@@ -233,11 +238,19 @@ export default function Home() {
       <section className="flex-1 flex flex-col min-w-0">
         {isError ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center p-8 border border-destructive/20 bg-destructive/5 rounded-xl">
-            <PackageX className="w-10 h-10 text-destructive mb-4" />
+            <AlertCircle className="w-10 h-10 text-destructive mb-4" />
             <h2 className="text-lg font-semibold text-destructive mb-2">Failed to load catalog</h2>
             <p className="text-sm text-muted-foreground mb-4 max-w-md">
               There was a problem communicating with the server. Please try again.
             </p>
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={() => { setLoading(true); setIsError(false); setRetryKey((k) => k + 1); }}
+              data-testid="button-retry"
+            >
+              <RefreshCcw className="w-4 h-4" /> Retry
+            </Button>
           </div>
         ) : (
           <>
@@ -245,7 +258,7 @@ export default function Home() {
             <div className="flex items-center justify-between gap-4 mb-5">
               <div className="flex items-center gap-3 min-w-0">
                 {loading && !result ? (
-                  <div className="h-6 w-36 bg-muted rounded animate-pulse" />
+                  <Skeleton className="h-6 w-36" />
                 ) : result ? (
                   <h2 className="text-base font-semibold text-foreground tabular-nums">
                     {result.total.toLocaleString()} result{result.total !== 1 ? "s" : ""}
@@ -275,12 +288,14 @@ export default function Home() {
                 <p className="text-muted-foreground text-sm max-w-sm">
                   We couldn&apos;t find anything matching your filters. Try adjusting your search or clearing some criteria.
                 </p>
-                <button
+                <Button
+                  variant="outline"
+                  className="mt-6"
                   onClick={clearAll}
-                  className="mt-6 px-4 py-2 text-sm font-medium rounded-md border border-border hover:bg-secondary transition-colors"
+                  data-testid="button-clear-empty-state"
                 >
                   Clear All Filters
-                </button>
+                </Button>
               </div>
             ) : (
               <>
@@ -302,20 +317,26 @@ export default function Home() {
                       <span className="font-medium text-foreground">{result.total.toLocaleString()}</span> total
                     </p>
                     <div className="flex gap-2 order-1 sm:order-2">
-                      <button
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => { setPage(Math.max(1, state.page - 1)); window.scrollTo({ top: 0, behavior: "smooth" }); }}
                         disabled={state.page <= 1}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium border border-border rounded-md hover:bg-secondary disabled:opacity-50 disabled:pointer-events-none transition-colors"
+                        data-testid="button-prev-page"
+                        className="gap-1.5"
                       >
                         <ChevronLeft className="w-4 h-4" /> Previous
-                      </button>
-                      <button
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => { setPage(Math.min(result.totalPages, state.page + 1)); window.scrollTo({ top: 0, behavior: "smooth" }); }}
                         disabled={state.page >= result.totalPages}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium border border-border rounded-md hover:bg-secondary disabled:opacity-50 disabled:pointer-events-none transition-colors"
+                        data-testid="button-next-page"
+                        className="gap-1.5"
                       >
                         Next <ChevronRight className="w-4 h-4" />
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 )}

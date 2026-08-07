@@ -6,6 +6,11 @@ import Link from "next/link";
 import { Product } from "@/types/product";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { ProductCard } from "@/components/ProductCard";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Separator } from "@/components/ui/separator";
+import { formatCurrency } from "@/lib/utils";
 import {
   ArrowLeft,
   Package,
@@ -49,14 +54,14 @@ export default function ProductPage(props: PageProps) {
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-6xl">
-        <div className="mb-6 h-4 w-32 bg-muted rounded animate-pulse" />
+        <div className="mb-6"><Skeleton className="h-4 w-32" /></div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
-          <div className="aspect-square rounded-xl bg-muted animate-pulse" />
+          <Skeleton className="aspect-square rounded-xl" />
           <div className="space-y-6">
-            <div className="h-6 w-24 bg-muted rounded animate-pulse" />
-            <div className="h-10 w-3/4 bg-muted rounded animate-pulse" />
-            <div className="h-8 w-32 bg-muted rounded animate-pulse" />
-            <div className="h-32 w-full bg-muted rounded animate-pulse" />
+            <Skeleton className="h-6 w-24" />
+            <Skeleton className="h-10 w-3/4" />
+            <Skeleton className="h-8 w-32" />
+            <Skeleton className="h-32 w-full" />
           </div>
         </div>
       </div>
@@ -72,11 +77,8 @@ export default function ProductPage(props: PageProps) {
         <p className="text-muted-foreground mb-6">
           We couldn&apos;t find the product you&apos;re looking for. It may have been removed or the ID is incorrect.
         </p>
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
-        >
-          Return to Catalog
+        <Link href="/">
+          <Button>Return to Catalog</Button>
         </Link>
       </div>
     );
@@ -90,12 +92,14 @@ export default function ProductPage(props: PageProps) {
 
       {/* Back link */}
       <nav>
-        <button
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => router.back()}
-          className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+          className="text-muted-foreground hover:text-primary -ml-2"
         >
           <ArrowLeft className="w-4 h-4 mr-1.5" /> Back to Search
-        </button>
+        </Button>
       </nav>
 
       {/* Main product grid */}
@@ -119,9 +123,9 @@ export default function ProductPage(props: PageProps) {
         <div className="flex flex-col">
           {/* Vendor badge */}
           <div className="mb-2">
-            <span className="inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-primary">
+            <Badge variant="outline" className="text-primary border-primary/20 bg-primary/5 uppercase tracking-wider text-[10px]">
               {product.vendor}
-            </span>
+            </Badge>
           </div>
 
           <h1 className="text-3xl lg:text-4xl font-display font-bold tracking-tight text-foreground mb-4">
@@ -129,7 +133,7 @@ export default function ProductPage(props: PageProps) {
           </h1>
 
           <div className="text-3xl font-semibold text-primary mb-6">
-            £{product.price.toFixed(2)}
+            {formatCurrency(product.price)}
           </div>
 
           {/* Status badges */}
@@ -177,9 +181,9 @@ export default function ProductPage(props: PageProps) {
               </h3>
               <div className="flex flex-wrap gap-2">
                 {product.tags.map((tag) => (
-                  <span key={tag} className="inline-flex items-center rounded-full bg-secondary text-secondary-foreground px-2.5 py-1 text-xs font-medium">
+                  <Badge key={tag} variant="secondary" className="px-2.5 py-1 text-xs">
                     {tag}
-                  </span>
+                  </Badge>
                 ))}
               </div>
             </div>
@@ -207,7 +211,8 @@ export default function ProductPage(props: PageProps) {
 
       {/* Full HTML description */}
       {product.bodyHtml && (
-        <section className="pt-8 border-t border-border">
+        <section className="pt-8">
+          <Separator className="mb-8" />
           <h2 className="text-xl font-display font-semibold mb-6">Full Description</h2>
           <div
             className="prose prose-sm dark:prose-invert max-w-none"
@@ -218,7 +223,8 @@ export default function ProductPage(props: PageProps) {
 
       {/* Recently Viewed */}
       {filteredRecent.length > 0 && (
-        <section className="pt-8 border-t border-border">
+        <section className="pt-8">
+          <Separator className="mb-8" />
           <h2 className="text-xl font-display font-semibold mb-6">Recently Viewed</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {filteredRecent.map((recent) => (

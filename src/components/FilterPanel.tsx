@@ -7,6 +7,12 @@ import {
   Building2,
   Tag,
 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
 interface FilterPanelProps {
   selectedVendors: string[];
@@ -62,7 +68,6 @@ export function FilterPanel({
     fetch("/api/products/vendors")
       .then((r) => r.json())
       .then((data: string[] | { vendor: string; count: number }[]) => {
-        // Handle both plain string[] and {vendor,count}[] responses
         if (Array.isArray(data) && data.length > 0 && typeof data[0] === "string") {
           setVendors((data as string[]).map((v) => ({ name: v, count: 0 })));
         } else {
@@ -106,60 +111,49 @@ export function FilterPanel({
           <label htmlFor="available-only" className="text-sm font-medium cursor-pointer select-none">
             In Stock Only
           </label>
-          {/* Toggle switch */}
-          <button
+          <Switch
             id="available-only"
-            type="button"
-            role="switch"
-            aria-checked={!!inStock}
-            onClick={() => setInStock(inStock ? undefined : true)}
-            className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${
-              inStock ? "bg-primary" : "bg-muted-foreground/30"
-            }`}
-          >
-            <span
-              className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                inStock ? "translate-x-4" : "translate-x-0"
-              }`}
-            />
-          </button>
+            checked={!!inStock}
+            onCheckedChange={(checked) => setInStock(checked ? true : undefined)}
+            data-testid="switch-available"
+          />
         </div>
       </FilterSection>
 
-      <hr className="border-border" />
+      <Separator />
 
       {/* Price range */}
       <FilterSection icon={<CircleDollarSign className="w-3.5 h-3.5" />} title="Price Range">
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
             <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">£</span>
-            <input
+            <Input
               type="number"
               min={0}
               placeholder="Min"
               value={minPrice ?? ""}
               onChange={(e) => setMinPrice(e.target.value === "" ? undefined : Number(e.target.value))}
-              className="w-full rounded-md border border-input bg-background pl-6 pr-2 py-1.5 text-sm outline-none transition focus:border-ring focus:ring-1 focus:ring-ring"
+              className="pl-6 h-8 text-sm"
               data-testid="input-min-price"
             />
           </div>
           <span className="text-muted-foreground text-xs font-medium">to</span>
           <div className="relative flex-1">
             <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">£</span>
-            <input
+            <Input
               type="number"
               min={0}
               placeholder="Max"
               value={maxPrice ?? ""}
               onChange={(e) => setMaxPrice(e.target.value === "" ? undefined : Number(e.target.value))}
-              className="w-full rounded-md border border-input bg-background pl-6 pr-2 py-1.5 text-sm outline-none transition focus:border-ring focus:ring-1 focus:ring-ring"
+              className="pl-6 h-8 text-sm"
               data-testid="input-max-price"
             />
           </div>
         </div>
       </FilterSection>
 
-      <hr className="border-border" />
+      <Separator />
 
       {/* Brands */}
       <FilterSection
@@ -169,27 +163,34 @@ export function FilterPanel({
         <div className="space-y-0.5 max-h-52 overflow-y-auto pr-1 scrollbar-thin">
           {vendors === null
             ? Array(5).fill(0).map((_, i) => (
-                <div key={i} className="h-7 w-full rounded-md bg-muted animate-pulse my-0.5" />
+                <Skeleton key={i} className="h-7 w-full rounded-md my-0.5" />
               ))
             : vendors.map((v) => {
-                const checked = selectedVendors.includes(v.name);
+                const isChecked = selectedVendors.includes(v.name);
                 return (
                   <label
                     key={v.name}
-                    className={`flex items-center gap-2.5 px-2 py-1.5 rounded-md cursor-pointer transition-colors select-none ${
-                      checked ? "bg-primary/8 text-primary" : "hover:bg-secondary/80 text-foreground"
-                    }`}
+                    htmlFor={`vendor-${v.name}`}
+                    className={cn(
+                      "flex items-center gap-2.5 px-2 py-1.5 rounded-md cursor-pointer transition-colors select-none group",
+                      isChecked
+                        ? "bg-primary/8 text-primary"
+                        : "hover:bg-secondary/80 text-foreground"
+                    )}
                   >
-                    <input
-                      type="checkbox"
-                      className="h-3.5 w-3.5 rounded border-muted-foreground/50 text-primary shrink-0"
-                      checked={checked}
-                      onChange={() => toggle(selectedVendors, setSelectedVendors, v.name)}
+                    <Checkbox
+                      id={`vendor-${v.name}`}
+                      checked={isChecked}
+                      onCheckedChange={() => toggle(selectedVendors, setSelectedVendors, v.name)}
+                      className={cn(
+                        "shrink-0 h-3.5 w-3.5",
+                        isChecked ? "border-primary" : "border-muted-foreground/50"
+                      )}
                       data-testid={`checkbox-vendor-${v.name}`}
                     />
                     <span className="text-sm leading-none flex-1 truncate" title={v.name}>{v.name}</span>
                     {v.count > 0 && (
-                      <span className={`text-[11px] tabular-nums shrink-0 ${checked ? "text-primary/70" : "text-muted-foreground"}`}>
+                      <span className={cn("text-[11px] tabular-nums shrink-0", isChecked ? "text-primary/70" : "text-muted-foreground")}>
                         {v.count}
                       </span>
                     )}
@@ -199,7 +200,7 @@ export function FilterPanel({
         </div>
       </FilterSection>
 
-      <hr className="border-border" />
+      <Separator />
 
       {/* Categories */}
       <FilterSection
@@ -209,27 +210,34 @@ export function FilterPanel({
         <div className="space-y-0.5 max-h-52 overflow-y-auto pr-1 scrollbar-thin">
           {categories === null
             ? Array(4).fill(0).map((_, i) => (
-                <div key={i} className="h-7 w-full rounded-md bg-muted animate-pulse my-0.5" />
+                <Skeleton key={i} className="h-7 w-full rounded-md my-0.5" />
               ))
             : categories.map((c) => {
-                const checked = selectedCategories.includes(c.name);
+                const isChecked = selectedCategories.includes(c.name);
                 return (
                   <label
                     key={c.name}
-                    className={`flex items-center gap-2.5 px-2 py-1.5 rounded-md cursor-pointer transition-colors select-none ${
-                      checked ? "bg-primary/8 text-primary" : "hover:bg-secondary/80 text-foreground"
-                    }`}
+                    htmlFor={`category-${c.name}`}
+                    className={cn(
+                      "flex items-center gap-2.5 px-2 py-1.5 rounded-md cursor-pointer transition-colors select-none group",
+                      isChecked
+                        ? "bg-primary/8 text-primary"
+                        : "hover:bg-secondary/80 text-foreground"
+                    )}
                   >
-                    <input
-                      type="checkbox"
-                      className="h-3.5 w-3.5 rounded border-muted-foreground/50 text-primary shrink-0"
-                      checked={checked}
-                      onChange={() => toggle(selectedCategories, setSelectedCategories, c.name)}
+                    <Checkbox
+                      id={`category-${c.name}`}
+                      checked={isChecked}
+                      onCheckedChange={() => toggle(selectedCategories, setSelectedCategories, c.name)}
+                      className={cn(
+                        "shrink-0 h-3.5 w-3.5",
+                        isChecked ? "border-primary" : "border-muted-foreground/50"
+                      )}
                       data-testid={`checkbox-category-${c.name}`}
                     />
                     <span className="text-sm leading-none flex-1 truncate" title={c.name}>{c.name}</span>
                     {c.count > 0 && (
-                      <span className={`text-[11px] tabular-nums shrink-0 ${checked ? "text-primary/70" : "text-muted-foreground"}`}>
+                      <span className={cn("text-[11px] tabular-nums shrink-0", isChecked ? "text-primary/70" : "text-muted-foreground")}>
                         {c.count}
                       </span>
                     )}
