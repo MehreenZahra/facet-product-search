@@ -1,24 +1,32 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useDebounce } from '@/hooks/useDebounce';
-import { SearchBar } from '@/components/SearchBar';
-import { SortSelect } from '@/components/SortSelect';
-import { ProductGrid } from '@/components/ProductGrid';
-import { Pagination } from '@/components/Pagination';
-import { LoadingState } from '@/components/LoadingState';
-import { EmptyState } from '@/components/EmptyState';
-import { Product } from '@/types/product';
+import { useEffect, useState } from "react";
+import { useDebounce } from "@/hooks/useDebounce";
+import { SearchBar } from "@/components/SearchBar";
+import { SortSelect } from "@/components/SortSelect";
+import { ProductGrid } from "@/components/ProductGrid";
+import { FilterPanel } from "@/components/FilterPanel";
+import { Pagination } from "@/components/Pagination";
+import { LoadingState } from "@/components/LoadingState";
+import { EmptyState } from "@/components/EmptyState";
+import { Product } from "@/types/product";
 
 const PAGE_SIZE = 20;
 
 export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [query, setQuery] = useState('');
-  const [sort, setSort] = useState<'relevance' | 'price_asc' | 'price_desc' | 'name_asc' | 'name_desc'>('relevance');
+  const [query, setQuery] = useState("");
+  const [sort, setSort] = useState<
+    "relevance" | "price_asc" | "price_desc" | "name_asc" | "name_desc"
+  >("relevance");
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [totalPages, setTotalPages] = useState(1);
+  const [selectedVendors, setSelectedVendors] = useState<string[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [minPrice, setMinPrice] = useState<number | undefined>(undefined);
+  const [maxPrice, setMaxPrice] = useState<number | undefined>(undefined);
+  const [inStock, setInStock] = useState<boolean | undefined>(undefined);
   const debouncedQuery = useDebounce(query, 300);
 
   useEffect(() => {
@@ -29,16 +37,28 @@ export default function Home() {
     setLoading(true);
     const searchParams = new URLSearchParams();
 
-    if (debouncedQuery.trim() !== '') {
-      searchParams.set('q', debouncedQuery);
+    if (debouncedQuery.trim() !== "") {
+      searchParams.set("q", debouncedQuery);
     }
 
-    if (sort !== 'relevance') {
-      searchParams.set('sort', sort);
+    if (sort !== "relevance") {
+      searchParams.set("sort", sort);
     }
 
-    searchParams.set('page', String(page));
-    searchParams.set('pageSize', String(PAGE_SIZE));
+    if (selectedVendors.length > 0) {
+      for (const v of selectedVendors) searchParams.append("vendors", v);
+    }
+
+    if (selectedCategories.length > 0) {
+      for (const c of selectedCategories) searchParams.append("categories", c);
+    }
+
+    if (minPrice !== undefined) searchParams.set("minPrice", String(minPrice));
+    if (maxPrice !== undefined) searchParams.set("maxPrice", String(maxPrice));
+    if (inStock !== undefined) searchParams.set("inStock", String(inStock));
+
+    searchParams.set("page", String(page));
+    searchParams.set("pageSize", String(PAGE_SIZE));
 
     fetch(`/api/products?${searchParams.toString()}`)
       .then((response) => response.json())
@@ -53,10 +73,15 @@ export default function Home() {
     <div className="min-h-screen bg-zinc-50 px-4 py-8 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <header className="mb-8 rounded-3xl bg-white p-8 shadow-sm dark:bg-zinc-900">
-          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-sky-600">Healf</p>
-          <h1 className="mt-3 text-4xl font-semibold tracking-tight">Wellness product search</h1>
+          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-sky-600">
+            Healf
+          </p>
+          <h1 className="mt-3 text-4xl font-semibold tracking-tight">
+            Wellness product search
+          </h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-600 dark:text-zinc-400">
-            Search the Healf catalogue with filters, sorting, and pagination powered by the product API.
+            Search the Healf catalogue with filters, sorting, and pagination
+            powered by the product API.
           </p>
         </header>
 
@@ -64,6 +89,19 @@ export default function Home() {
           <aside className="space-y-6 rounded-3xl bg-white p-6 shadow-sm dark:bg-zinc-900">
             <SearchBar value={query} onChange={setQuery} />
             <SortSelect value={sort} onChange={setSort} />
+            <hr className="my-4 border-t border-zinc-100" />
+            <FilterPanel
+              selectedVendors={selectedVendors}
+              setSelectedVendors={setSelectedVendors}
+              selectedCategories={selectedCategories}
+              setSelectedCategories={setSelectedCategories}
+              minPrice={minPrice}
+              setMinPrice={setMinPrice}
+              maxPrice={maxPrice}
+              setMaxPrice={setMaxPrice}
+              inStock={inStock}
+              setInStock={setInStock}
+            />
           </aside>
 
           <section className="space-y-6">
@@ -74,7 +112,11 @@ export default function Home() {
             ) : (
               <ProductGrid products={products} />
             )}
-            <Pagination page={page} totalPages={totalPages} onChange={setPage} />
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              onChange={setPage}
+            />
           </section>
         </div>
       </div>
