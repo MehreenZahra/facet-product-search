@@ -3,6 +3,6 @@ import { getProductStore } from "@/lib/product-store";
 
 export async function GET() {
   const store = getProductStore();
-  const categories = store.getCategories();
+  const categories = store.getCategoryCounts();
   return NextResponse.json(categories);
 }

@@ -33,7 +33,7 @@ export default function ProductPage(props: PageProps) {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const { recentProducts, addProduct } = useRecentlyViewed();
-
+  const [imageError, setImageError] = useState(false);
   useEffect(() => {
     setLoading(true);
     fetch(`/api/products/${params.id}`)
@@ -54,7 +54,9 @@ export default function ProductPage(props: PageProps) {
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-6xl">
-        <div className="mb-6"><Skeleton className="h-4 w-32" /></div>
+        <div className="mb-6">
+          <Skeleton className="h-4 w-32" />
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
           <Skeleton className="aspect-square rounded-xl" />
           <div className="space-y-6">
@@ -75,7 +77,8 @@ export default function ProductPage(props: PageProps) {
         <Package className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
         <h1 className="text-2xl font-bold mb-2">Product not found</h1>
         <p className="text-muted-foreground mb-6">
-          We couldn&apos;t find the product you&apos;re looking for. It may have been removed or the ID is incorrect.
+          We couldn&apos;t find the product you&apos;re looking for. It may have
+          been removed or the ID is incorrect.
         </p>
         <Link href="/">
           <Button>Return to Catalog</Button>
@@ -85,11 +88,12 @@ export default function ProductPage(props: PageProps) {
   }
 
   const inStock = product.inventory > 0;
-  const filteredRecent = recentProducts.filter((p) => p.id !== product.id).slice(0, 4);
+  const filteredRecent = recentProducts
+    .filter((p) => p.id !== product.id)
+    .slice(0, 4);
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl flex flex-col gap-12">
-
       {/* Back link */}
       <nav>
         <Button
@@ -104,26 +108,36 @@ export default function ProductPage(props: PageProps) {
 
       {/* Main product grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-16">
-
-        {/* Image */}
-        <div className="bg-secondary rounded-2xl aspect-square flex items-center justify-center overflow-hidden border border-border">
-          {product.imageUrl ? (
+        {/* Image — sticky so it stays visible while scrolling the details */}
+        <div className="md:self-start md:sticky md:top-24">
+          <div className="bg-secondary rounded-2xl aspect-square flex items-center justify-center overflow-hidden border border-border">
+          {product.imageUrl && !imageError ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={product.imageUrl}
               alt={product.title}
               className="w-full h-full object-contain p-6"
+              onError={() => setImageError(true)}
             />
           ) : (
-            <Package className="w-24 h-24 text-muted-foreground/30" />
+            <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-muted-foreground bg-secondary select-none">
+              <Package className="w-10 h-10 opacity-25" />
+              <span className="text-[11px] opacity-40 font-medium tracking-wide">
+                No image
+              </span>
+            </div>
           )}
+          </div>
         </div>
 
         {/* Details */}
         <div className="flex flex-col">
           {/* Vendor badge */}
           <div className="mb-2">
-            <Badge variant="outline" className="text-primary border-primary/20 bg-primary/5 uppercase tracking-wider text-[10px]">
+            <Badge
+              variant="outline"
+              className="text-primary border-primary/20 bg-primary/5 uppercase tracking-wider text-[10px]"
+            >
               {product.vendor}
             </Badge>
           </div>
@@ -140,7 +154,8 @@ export default function ProductPage(props: PageProps) {
           <div className="flex flex-wrap items-center gap-3 mb-8">
             {inStock ? (
               <div className="flex items-center text-sm font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-3 py-1.5 rounded-md">
-                <CheckCircle2 className="w-4 h-4 mr-1.5" /> In Stock ({product.inventory} available)
+                <CheckCircle2 className="w-4 h-4 mr-1.5" /> In Stock (
+                {product.inventory} available)
               </div>
             ) : (
               <div className="flex items-center text-sm font-medium text-destructive bg-destructive/10 px-3 py-1.5 rounded-md">
@@ -162,14 +177,22 @@ export default function ProductPage(props: PageProps) {
           {/* Metafields */}
           {product.metafields?.ingredients && (
             <div className="mb-4 text-sm">
-              <h3 className="font-semibold text-foreground mb-1">Ingredients</h3>
-              <p className="text-muted-foreground">{product.metafields.ingredients}</p>
+              <h3 className="font-semibold text-foreground mb-1">
+                Ingredients
+              </h3>
+              <p className="text-muted-foreground">
+                {product.metafields.ingredients}
+              </p>
             </div>
           )}
           {product.metafields?.suggestedUse && (
             <div className="mb-4 text-sm">
-              <h3 className="font-semibold text-foreground mb-1">Suggested Use</h3>
-              <p className="text-muted-foreground">{product.metafields.suggestedUse}</p>
+              <h3 className="font-semibold text-foreground mb-1">
+                Suggested Use
+              </h3>
+              <p className="text-muted-foreground">
+                {product.metafields.suggestedUse}
+              </p>
             </div>
           )}
 
@@ -181,7 +204,11 @@ export default function ProductPage(props: PageProps) {
               </h3>
               <div className="flex flex-wrap gap-2">
                 {product.tags.map((tag) => (
-                  <Badge key={tag} variant="secondary" className="px-2.5 py-1 text-xs">
+                  <Badge
+                    key={tag}
+                    variant="secondary"
+                    className="px-2.5 py-1 text-xs"
+                  >
                     {tag}
                   </Badge>
                 ))}
@@ -209,23 +236,13 @@ export default function ProductPage(props: PageProps) {
         </div>
       </div>
 
-      {/* Full HTML description */}
-      {product.bodyHtml && (
-        <section className="pt-8">
-          <Separator className="mb-8" />
-          <h2 className="text-xl font-display font-semibold mb-6">Full Description</h2>
-          <div
-            className="prose prose-sm dark:prose-invert max-w-none"
-            dangerouslySetInnerHTML={{ __html: product.bodyHtml }}
-          />
-        </section>
-      )}
-
       {/* Recently Viewed */}
       {filteredRecent.length > 0 && (
         <section className="pt-8">
           <Separator className="mb-8" />
-          <h2 className="text-xl font-display font-semibold mb-6">Recently Viewed</h2>
+          <h2 className="text-xl font-display font-semibold mb-6">
+            Recently Viewed
+          </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {filteredRecent.map((recent) => (
               <ProductCard key={recent.id} product={recent} />
