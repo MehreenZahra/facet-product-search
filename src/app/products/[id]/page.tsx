@@ -35,6 +35,7 @@ export default function ProductPage(props: PageProps) {
   const { recentProducts, addProduct } = useRecentlyViewed();
   const [imageError, setImageError] = useState(false);
   useEffect(() => {
+    window.scrollTo(0, 0);
     setLoading(true);
     fetch(`/api/products/${params.id}`)
       .then((res) => {
@@ -111,22 +112,22 @@ export default function ProductPage(props: PageProps) {
         {/* Image — sticky so it stays visible while scrolling the details */}
         <div className="md:self-start md:sticky md:top-24">
           <div className="bg-secondary rounded-2xl aspect-square flex items-center justify-center overflow-hidden border border-border">
-          {product.imageUrl && !imageError ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={product.imageUrl}
-              alt={product.title}
-              className="w-full h-full object-contain p-6"
-              onError={() => setImageError(true)}
-            />
-          ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-muted-foreground bg-secondary select-none">
-              <Package className="w-10 h-10 opacity-25" />
-              <span className="text-[11px] opacity-40 font-medium tracking-wide">
-                No image
-              </span>
-            </div>
-          )}
+            {product.imageUrl && !imageError ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={product.imageUrl}
+                alt={product.title}
+                className="w-full h-full object-contain p-6"
+                onError={() => setImageError(true)}
+              />
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-muted-foreground bg-secondary select-none">
+                <Package className="w-10 h-10 opacity-25" />
+                <span className="text-[11px] opacity-40 font-medium tracking-wide">
+                  No image
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
