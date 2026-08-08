@@ -1,4 +1,7 @@
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+"use client";
+
+import { useMemo, useCallback } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 
 export type FiltersState = {
   q: string;
@@ -11,114 +14,139 @@ export type FiltersState = {
   page: number;
 };
 
-function getInitialFilters(): FiltersState {
-  if (typeof window === "undefined") {
-    return {
-      q: "",
-      vendors: [],
-      categories: [],
-      minPrice: undefined,
-      maxPrice: undefined,
-      inStock: undefined,
-      sort: "relevance",
-      page: 1,
-    };
-  }
-  const params = new URLSearchParams(window.location.search);
-  return {
-    q: params.get("q") || "",
-    vendors: params.getAll("vendors"),
-    categories: params.getAll("categories"),
-    minPrice: params.get("minPrice") ? Number(params.get("minPrice")) : undefined,
-    maxPrice: params.get("maxPrice") ? Number(params.get("maxPrice")) : undefined,
-    inStock:
-      params.get("inStock") === "true"
-        ? true
-        : params.get("inStock") === "false"
-          ? false
-          : undefined,
-    sort: (params.get("sort") as FiltersState["sort"]) || "relevance",
-    page: params.get("page") ? Math.max(1, Number(params.get("page"))) : 1,
-  };
-}
-
 export function useFilters() {
-  const [q, setQ] = useState<string>(() => getInitialFilters().q);
-  const [vendors, setVendors] = useState<string[]>(() => getInitialFilters().vendors);
-  const [categories, setCategories] = useState<string[]>(() => getInitialFilters().categories);
-  const [minPrice, setMinPrice] = useState<number | undefined>(() => getInitialFilters().minPrice);
-  const [maxPrice, setMaxPrice] = useState<number | undefined>(() => getInitialFilters().maxPrice);
-  const [inStock, setInStock] = useState<boolean | undefined>(() => getInitialFilters().inStock);
-  const [sort, setSort] = useState<FiltersState["sort"]>(() => getInitialFilters().sort);
-  const [page, setPage] = useState<number>(() => getInitialFilters().page);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
 
-  const isInitialized = useRef(false);
+  // 1. Derive filter state directly from URL searchParams (single source of truth!)
+  const state = useMemo<FiltersState>(() => {
+    const q = searchParams.get("q") || "";
+    const vendors = searchParams.getAll("vendors");
+    const categories = searchParams.getAll("categories");
+    const minParam = searchParams.get("minPrice");
+    const maxParam = searchParams.get("maxPrice");
+    const inStockParam = searchParams.get("inStock");
+    const sortParam = searchParams.get("sort") as FiltersState["sort"] | null;
+    const pageParam = searchParams.get("page");
 
-  const syncStateFromUrl = useCallback(() => {
-    const initial = getInitialFilters();
-    setQ(initial.q);
-    setVendors(initial.vendors);
-    setCategories(initial.categories);
-    setMinPrice(initial.minPrice);
-    setMaxPrice(initial.maxPrice);
-    setInStock(initial.inStock);
-    setSort(initial.sort);
-    setPage(initial.page);
-  }, []);
-
-  // Mark initialized & listen to browser back/forward (popstate)
-  useEffect(() => {
-    isInitialized.current = true;
-    syncStateFromUrl();
-
-    const handlePopState = () => {
-      syncStateFromUrl();
-    };
-
-    window.addEventListener("popstate", handlePopState);
-    return () => window.removeEventListener("popstate", handlePopState);
-  }, [syncStateFromUrl]);
-
-  // Sync state to URL (only AFTER initialization!)
-  useEffect(() => {
-    if (typeof window === "undefined" || !isInitialized.current) return;
-
-    const params = new URLSearchParams();
-    if (q) params.set("q", q);
-    if (vendors.length) vendors.forEach((v) => params.append("vendors", v));
-    if (categories.length)
-      categories.forEach((c) => params.append("categories", c));
-    if (minPrice !== undefined) params.set("minPrice", String(minPrice));
-    if (maxPrice !== undefined) params.set("maxPrice", String(maxPrice));
-    if (inStock !== undefined) params.set("inStock", String(inStock));
-    if (sort && sort !== "relevance") params.set("sort", sort);
-    if (page && page !== 1) params.set("page", String(page));
-
-    const queryStr = params.toString();
-    const newUrl = queryStr
-      ? `${window.location.pathname}?${queryStr}`
-      : window.location.pathname;
-
-    const currentFullUrl = `${window.location.pathname}${window.location.search}`;
-    if (currentFullUrl !== newUrl) {
-      window.history.replaceState({}, "", newUrl);
-    }
-  }, [q, vendors, categories, minPrice, maxPrice, inStock, sort, page]);
-
-  const state = useMemo<FiltersState>(
-    () => ({
+    return {
       q,
       vendors,
       categories,
-      minPrice,
-      maxPrice,
-      inStock,
-      sort,
-      page,
-    }),
-    [q, vendors, categories, minPrice, maxPrice, inStock, sort, page],
+      minPrice: minParam ? Number(minParam) : undefined,
+      maxPrice: maxParam ? Number(maxParam) : undefined,
+      inStock:
+        inStockParam === "true"
+          ? true
+          : inStockParam === "false"
+            ? false
+            : undefined,
+      sort: sortParam || "relevance",
+      page: pageParam ? Math.max(1, Number(pageParam)) : 1,
+    };
+  }, [searchParams]);
+
+  // 2. Update URL parameters using Next.js App Router
+  const updateFilters = useCallback(
+    (updater: (params: URLSearchParams) => void) => {
+      const params = new URLSearchParams(searchParams.toString());
+      updater(params);
+      const queryStr = params.toString();
+      const newUrl = queryStr ? `${pathname}?${queryStr}` : pathname;
+      router.replace(newUrl, { scroll: false });
+    },
+    [searchParams, pathname, router],
   );
 
+  const setQ = useCallback(
+    (q: string) => {
+      updateFilters((params) => {
+        if (q.trim()) params.set("q", q);
+        else params.delete("q");
+        params.delete("page");
+      });
+    },
+    [updateFilters],
+  );
+
+  const setVendors = useCallback(
+    (vendors: string[]) => {
+      updateFilters((params) => {
+        params.delete("vendors");
+        vendors.forEach((v) => params.append("vendors", v));
+        params.delete("page");
+      });
+    },
+    [updateFilters],
+  );
+
+  const setCategories = useCallback(
+    (categories: string[]) => {
+      updateFilters((params) => {
+        params.delete("categories");
+        categories.forEach((c) => params.append("categories", c));
+        params.delete("page");
+      });
+    },
+    [updateFilters],
+  );
+
+  const setMinPrice = useCallback(
+    (minPrice: number | undefined) => {
+      updateFilters((params) => {
+        if (minPrice !== undefined) params.set("minPrice", String(minPrice));
+        else params.delete("minPrice");
+        params.delete("page");
+      });
+    },
+    [updateFilters],
+  );
+
+  const setMaxPrice = useCallback(
+    (maxPrice: number | undefined) => {
+      updateFilters((params) => {
+        if (maxPrice !== undefined) params.set("maxPrice", String(maxPrice));
+        else params.delete("maxPrice");
+        params.delete("page");
+      });
+    },
+    [updateFilters],
+  );
+
+  const setInStock = useCallback(
+    (inStock: boolean | undefined) => {
+      updateFilters((params) => {
+        if (inStock !== undefined) params.set("inStock", String(inStock));
+        else params.delete("inStock");
+        params.delete("page");
+      });
+    },
+    [updateFilters],
+  );
+
+  const setSort = useCallback(
+    (sort: FiltersState["sort"]) => {
+      updateFilters((params) => {
+        if (sort && sort !== "relevance") params.set("sort", sort);
+        else params.delete("sort");
+      });
+    },
+    [updateFilters],
+  );
+
+  const setPage = useCallback(
+    (page: number) => {
+      updateFilters((params) => {
+        if (page > 1) params.set("page", String(page));
+        else params.delete("page");
+      });
+    },
+    [updateFilters],
+  );
+  const clearAll = useCallback(() => {
+    router.replace(pathname, { scroll: false });
+  }, [pathname, router]);
   return {
     state,
     setQ,
@@ -129,5 +157,6 @@ export function useFilters() {
     setInStock,
     setSort,
     setPage,
+    clearAll,
   };
 }

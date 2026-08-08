@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useFilters } from "@/hooks/useFilters";
 import { SearchBar } from "@/components/SearchBar";
@@ -51,7 +51,7 @@ function FilterPill({
   );
 }
 
-export default function Home() {
+function HomeContent() {
   const [products, setProducts] = useState<Product[]>([]);
   const [result, setResult] = useState<ProductsResult | null>(null);
   const {
@@ -64,6 +64,7 @@ export default function Home() {
     setInStock,
     setSort,
     setPage,
+    clearAll,
   } = useFilters();
   const [loading, setLoading] = useState(true);
   const [isPlaceholder, setIsPlaceholder] = useState(false);
@@ -83,20 +84,6 @@ export default function Home() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
-
-  // ── Reset page when filters change ───────────────────────────────────────
-  useEffect(() => {
-    setPage(1);
-  }, [
-    debouncedQuery,
-    state.sort,
-    state.vendors,
-    state.categories,
-    state.minPrice,
-    state.maxPrice,
-    state.inStock,
-    setPage,
-  ]);
 
   // ── Fetch products ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -154,26 +141,6 @@ export default function Home() {
     (state.maxPrice !== undefined ? 1 : 0);
 
   const hasActive = activeFilterCount > 0 || !!debouncedQuery;
-
-  const clearAll = useCallback(() => {
-    setQ("");
-    setVendors([]);
-    setCategories([]);
-    setMinPrice(undefined);
-    setMaxPrice(undefined);
-    setInStock(undefined);
-    setSort("relevance");
-    setPage(1);
-  }, [
-    setQ,
-    setVendors,
-    setCategories,
-    setMinPrice,
-    setMaxPrice,
-    setInStock,
-    setSort,
-    setPage,
-  ]);
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 flex flex-col lg:flex-row gap-6">
@@ -410,5 +377,26 @@ export default function Home() {
         )}
       </section>
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense
+      fallback={
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <Skeleton className="h-10 w-full mb-6 rounded-lg" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {Array(8)
+              .fill(0)
+              .map((_, i) => (
+                <ProductCardSkeleton key={i} />
+              ))}
+          </div>
+        </div>
+      }
+    >
+      <HomeContent />
+    </Suspense>
   );
 }
