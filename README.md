@@ -108,7 +108,6 @@ healf-product-search/
 │   │   ├── SortSelect.tsx        # Sort dropdown (relevance, price, name)
 │   │   ├── ProductCard.tsx       # Card with image fallback, out-of-stock badge, highlight
 │   │   ├── ProductGrid.tsx       # Responsive grid wrapper
-│   │   ├── ProductDetail.tsx     # Legacy detail component (superseded by page route)
 │   │   ├── DarkModeToggle.tsx    # Sun/Moon toggle with localStorage persistence
 │   │   ├── Pagination.tsx        # Page controls
 │   │   ├── EmptyState.tsx        # "No results" illustration
@@ -274,7 +273,6 @@ Main search, filter, sort, and pagination endpoint.
 | `q` | `string` | — | Free-text search query |
 | `vendors` | `string[]` | — | Filter by vendor (multi-select, repeated param) |
 | `categories` | `string[]` | — | Filter by category |
-| `tags` | `string[]` | — | Filter by tags (all must match) |
 | `minPrice` | `number` | — | Minimum price (GBP) |
 | `maxPrice` | `number` | — | Maximum price (GBP) |
 | `inStock` | `boolean` | — | `true` = inventory > 0 only |
