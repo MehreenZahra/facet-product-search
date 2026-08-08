@@ -53,7 +53,6 @@ export default function Home() {
     setQ,
     setVendors,
     setCategories,
-    setTags,
     setMinPrice,
     setMaxPrice,
     setInStock,
@@ -87,7 +86,6 @@ export default function Home() {
     state.sort,
     state.vendors,
     state.categories,
-    state.tags,
     state.minPrice,
     state.maxPrice,
     state.inStock,
@@ -103,7 +101,6 @@ export default function Home() {
     if (state.sort && state.sort !== "relevance") searchParams.set("sort", state.sort);
     state.vendors.forEach((v) => searchParams.append("vendors", v));
     state.categories.forEach((c) => searchParams.append("categories", c));
-    state.tags.forEach((t) => searchParams.append("tags", t));
     if (state.minPrice !== undefined) searchParams.set("minPrice", String(state.minPrice));
     if (state.maxPrice !== undefined) searchParams.set("maxPrice", String(state.maxPrice));
     if (state.inStock) searchParams.set("inStock", "true");
@@ -133,7 +130,6 @@ export default function Home() {
     state.page,
     state.vendors,
     state.categories,
-    state.tags,
     state.minPrice,
     state.maxPrice,
     state.inStock,
@@ -154,13 +150,12 @@ export default function Home() {
     setQ("");
     setVendors([]);
     setCategories([]);
-    setTags([]);
     setMinPrice(undefined);
     setMaxPrice(undefined);
     setInStock(undefined);
     setSort("relevance");
     setPage(1);
-  }, [setQ, setVendors, setCategories, setTags, setMinPrice, setMaxPrice, setInStock, setSort, setPage]);
+  }, [setQ, setVendors, setCategories, setMinPrice, setMaxPrice, setInStock, setSort, setPage]);
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 flex flex-col lg:flex-row gap-6">
@@ -222,8 +217,6 @@ export default function Home() {
             setSelectedVendors={setVendors}
             selectedCategories={state.categories}
             setSelectedCategories={setCategories}
-            selectedTags={state.tags}
-            setSelectedTags={setTags}
             minPrice={state.minPrice}
             setMinPrice={setMinPrice}
             maxPrice={state.maxPrice}

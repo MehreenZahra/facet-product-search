@@ -5,7 +5,7 @@ import {
   CheckCircle2,
   CircleDollarSign,
   Building2,
-  Tag,
+  Layers,
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
@@ -19,8 +19,6 @@ interface FilterPanelProps {
   setSelectedVendors: (v: string[]) => void;
   selectedCategories: string[];
   setSelectedCategories: (c: string[]) => void;
-  selectedTags?: string[];
-  setSelectedTags?: (t: string[]) => void;
   minPrice: number | undefined;
   setMinPrice: (n: number | undefined) => void;
   maxPrice: number | undefined;
@@ -204,7 +202,7 @@ export function FilterPanel({
 
       {/* Categories */}
       <FilterSection
-        icon={<Tag className="w-3.5 h-3.5" />}
+        icon={<Layers className="w-3.5 h-3.5" />}
         title={`Categories${selectedCategories.length > 0 ? ` (${selectedCategories.length})` : ""}`}
       >
         <div className="space-y-0.5 max-h-52 overflow-y-auto pr-1 scrollbar-thin">

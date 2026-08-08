@@ -5,7 +5,6 @@ const WEIGHTS = {
   TITLE_EXACT: 5,
   TITLE_PARTIAL: 3,
   VENDOR: 2,
-  TAG: 1.5,
   DESCRIPTION: 1,
 };
 
@@ -22,7 +21,6 @@ export function searchProducts(products: Product[], query: string): { product: P
     const titleLower = product.title.toLowerCase();
     const vendorLower = product.vendor.toLowerCase();
     const descLower = product.description.toLowerCase();
-    const tagsLower = product.tags.map(t => t.toLowerCase());
 
     // Exact match in title (high priority)
     if (titleLower === normalizedQuery) {
@@ -35,7 +33,6 @@ export function searchProducts(products: Product[], query: string): { product: P
     for (const token of queryTokens) {
       if (titleLower.includes(token)) score += WEIGHTS.TITLE_PARTIAL * 0.5;
       if (vendorLower.includes(token)) score += WEIGHTS.VENDOR;
-      if (tagsLower.some(t => t.includes(token))) score += WEIGHTS.TAG;
       if (descLower.includes(token)) score += WEIGHTS.DESCRIPTION;
     }
 
