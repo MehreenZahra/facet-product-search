@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 
 export type FiltersState = {
   q: string;
@@ -11,53 +11,78 @@ export type FiltersState = {
   page: number;
 };
 
-function parseArrayParam(val: string | string[] | null): string[] {
-  if (!val) return [];
-  if (Array.isArray(val)) return val;
-  return val.split(",").filter(Boolean);
+function getInitialFilters(): FiltersState {
+  if (typeof window === "undefined") {
+    return {
+      q: "",
+      vendors: [],
+      categories: [],
+      minPrice: undefined,
+      maxPrice: undefined,
+      inStock: undefined,
+      sort: "relevance",
+      page: 1,
+    };
+  }
+  const params = new URLSearchParams(window.location.search);
+  return {
+    q: params.get("q") || "",
+    vendors: params.getAll("vendors"),
+    categories: params.getAll("categories"),
+    minPrice: params.get("minPrice") ? Number(params.get("minPrice")) : undefined,
+    maxPrice: params.get("maxPrice") ? Number(params.get("maxPrice")) : undefined,
+    inStock:
+      params.get("inStock") === "true"
+        ? true
+        : params.get("inStock") === "false"
+          ? false
+          : undefined,
+    sort: (params.get("sort") as FiltersState["sort"]) || "relevance",
+    page: params.get("page") ? Math.max(1, Number(params.get("page"))) : 1,
+  };
 }
 
 export function useFilters() {
-  const [q, setQ] = useState("");
-  const [vendors, setVendors] = useState<string[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
-  const [minPrice, setMinPrice] = useState<number | undefined>(undefined);
-  const [maxPrice, setMaxPrice] = useState<number | undefined>(undefined);
-  const [inStock, setInStock] = useState<boolean | undefined>(undefined);
-  const [sort, setSort] = useState<FiltersState["sort"]>("relevance");
-  const [page, setPage] = useState<number>(1);
+  const [q, setQ] = useState<string>(() => getInitialFilters().q);
+  const [vendors, setVendors] = useState<string[]>(() => getInitialFilters().vendors);
+  const [categories, setCategories] = useState<string[]>(() => getInitialFilters().categories);
+  const [minPrice, setMinPrice] = useState<number | undefined>(() => getInitialFilters().minPrice);
+  const [maxPrice, setMaxPrice] = useState<number | undefined>(() => getInitialFilters().maxPrice);
+  const [inStock, setInStock] = useState<boolean | undefined>(() => getInitialFilters().inStock);
+  const [sort, setSort] = useState<FiltersState["sort"]>(() => getInitialFilters().sort);
+  const [page, setPage] = useState<number>(() => getInitialFilters().page);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const params = new URLSearchParams(window.location.search);
-    const qParam = params.get("q") || "";
-    const vendorsParam = params.getAll("vendors");
-    const categoriesParam = params.getAll("categories");
-    const minParam = params.get("minPrice");
-    const maxParam = params.get("maxPrice");
-    const inStockParam = params.get("inStock");
-    const sortParam = params.get("sort") as FiltersState["sort"] | null;
-    const pageParam = params.get("page");
+  const isInitialized = useRef(false);
 
-    setQ(qParam);
-    setVendors(vendorsParam || []);
-    setCategories(categoriesParam || []);
-    setMinPrice(minParam ? Number(minParam) : undefined);
-    setMaxPrice(maxParam ? Number(maxParam) : undefined);
-    setInStock(
-      inStockParam === "true"
-        ? true
-        : inStockParam === "false"
-          ? false
-          : undefined,
-    );
-    if (sortParam) setSort(sortParam);
-    setPage(pageParam ? Math.max(1, Number(pageParam)) : 1);
+  const syncStateFromUrl = useCallback(() => {
+    const initial = getInitialFilters();
+    setQ(initial.q);
+    setVendors(initial.vendors);
+    setCategories(initial.categories);
+    setMinPrice(initial.minPrice);
+    setMaxPrice(initial.maxPrice);
+    setInStock(initial.inStock);
+    setSort(initial.sort);
+    setPage(initial.page);
   }, []);
 
-  // sync to URL
+  // Mark initialized & listen to browser back/forward (popstate)
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    isInitialized.current = true;
+    syncStateFromUrl();
+
+    const handlePopState = () => {
+      syncStateFromUrl();
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [syncStateFromUrl]);
+
+  // Sync state to URL (only AFTER initialization!)
+  useEffect(() => {
+    if (typeof window === "undefined" || !isInitialized.current) return;
+
     const params = new URLSearchParams();
     if (q) params.set("q", q);
     if (vendors.length) vendors.forEach((v) => params.append("vendors", v));
@@ -69,8 +94,15 @@ export function useFilters() {
     if (sort && sort !== "relevance") params.set("sort", sort);
     if (page && page !== 1) params.set("page", String(page));
 
-    const newUrl = `${window.location.pathname}?${params.toString()}`;
-    window.history.replaceState({}, "", newUrl);
+    const queryStr = params.toString();
+    const newUrl = queryStr
+      ? `${window.location.pathname}?${queryStr}`
+      : window.location.pathname;
+
+    const currentFullUrl = `${window.location.pathname}${window.location.search}`;
+    if (currentFullUrl !== newUrl) {
+      window.history.replaceState({}, "", newUrl);
+    }
   }, [q, vendors, categories, minPrice, maxPrice, inStock, sort, page]);
 
   const state = useMemo<FiltersState>(

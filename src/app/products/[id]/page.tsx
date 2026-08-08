@@ -93,6 +93,19 @@ export default function ProductPage(props: PageProps) {
     .filter((p) => p.id !== product.id)
     .slice(0, 4);
 
+  const handleBack = () => {
+    if (
+      typeof window !== "undefined" &&
+      window.history.length > 1 &&
+      document.referrer &&
+      document.referrer.startsWith(window.location.origin)
+    ) {
+      router.back();
+    } else {
+      router.push("/");
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl flex flex-col gap-12">
       {/* Back link */}
@@ -100,7 +113,7 @@ export default function ProductPage(props: PageProps) {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => router.back()}
+          onClick={handleBack}
           className="text-muted-foreground hover:text-primary -ml-2"
         >
           <ArrowLeft className="w-4 h-4 mr-1.5" /> Back to Search
