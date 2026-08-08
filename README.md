@@ -35,7 +35,7 @@ npx tsx scripts/preprocess.ts
 npm run dev
 ```
 
-The app will be available at `http://localhost:3000`.
+The app will be available at `https://facet-product-search.vercel.app/`.
 
 > **Prerequisite:** The source CSV must be placed at `data/products.csv`. The preprocessor reads it once and outputs `data/products.json` (~16 MB). The server never touches the CSV again.
 
