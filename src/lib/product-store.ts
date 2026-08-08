@@ -3,6 +3,7 @@ import { loadProducts } from "./csv-parser";
 
 class ProductStore {
   private products: Product[] = [];
+  private productsById: Map<string, Product> = new Map();
   private vendors: string[] = [];
   private categories: string[] = [];
   private initialized = false;
@@ -19,6 +20,7 @@ class ProductStore {
     for (const p of this.products) {
       if (p.vendor) vendorSet.add(p.vendor);
       if (p.category) categorySet.add(p.category);
+      this.productsById.set(p.id, p);
     }
 
     // Sort alphabetically
@@ -38,7 +40,8 @@ class ProductStore {
 
   public getProductById(id: string): Product | undefined {
     this.initialize();
-    return this.products.find((p) => p.id === id);
+    return this.productsById.get(id);
+
   }
 
   public getVendors(): string[] {

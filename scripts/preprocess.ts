@@ -85,7 +85,7 @@ function processCSV() {
         // Field extraction
         const tagsRaw = row['TAGS'] || '';
         const rawTagsArray = tagsRaw.split(',').map((t: string) => t.trim()).filter((t: string) => t.length > 0);
-        
+        // Excludes internal Shopify pipe tags --Tag Cleaning code
         const tags = rawTagsArray
           .filter((t: string) => !t.includes('|'))
           .map((t: string) => {
