@@ -33,7 +33,13 @@ interface ProductsResult {
 
 // ─── Active filter pill ────────────────────────────────────────────────────────
 
-function FilterPill({ label, onRemove }: { label: string; onRemove: () => void }) {
+function FilterPill({
+  label,
+  onRemove,
+}: {
+  label: string;
+  onRemove: () => void;
+}) {
   return (
     <button
       onClick={onRemove}
@@ -98,11 +104,14 @@ export default function Home() {
     const searchParams = new URLSearchParams();
 
     if (debouncedQuery.trim()) searchParams.set("q", debouncedQuery);
-    if (state.sort && state.sort !== "relevance") searchParams.set("sort", state.sort);
+    if (state.sort && state.sort !== "relevance")
+      searchParams.set("sort", state.sort);
     state.vendors.forEach((v) => searchParams.append("vendors", v));
     state.categories.forEach((c) => searchParams.append("categories", c));
-    if (state.minPrice !== undefined) searchParams.set("minPrice", String(state.minPrice));
-    if (state.maxPrice !== undefined) searchParams.set("maxPrice", String(state.maxPrice));
+    if (state.minPrice !== undefined)
+      searchParams.set("minPrice", String(state.minPrice));
+    if (state.maxPrice !== undefined)
+      searchParams.set("maxPrice", String(state.maxPrice));
     if (state.inStock) searchParams.set("inStock", "true");
     searchParams.set("page", String(state.page));
     searchParams.set("pageSize", String(PAGE_SIZE));
@@ -155,18 +164,29 @@ export default function Home() {
     setInStock(undefined);
     setSort("relevance");
     setPage(1);
-  }, [setQ, setVendors, setCategories, setMinPrice, setMaxPrice, setInStock, setSort, setPage]);
+  }, [
+    setQ,
+    setVendors,
+    setCategories,
+    setMinPrice,
+    setMaxPrice,
+    setInStock,
+    setSort,
+    setPage,
+  ]);
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 flex flex-col lg:flex-row gap-6">
-
       {/* ── Sidebar ─────────────────────────────────────────────────────── */}
       <aside className="w-full lg:w-72 shrink-0">
         <div className="sticky top-6 space-y-1">
-
           {/* Search */}
           <div className="mb-5">
-            <SearchBar value={state.q} onChange={setQ} inputRef={searchInputRef} />
+            <SearchBar
+              value={state.q}
+              onChange={setQ}
+              inputRef={searchInputRef}
+            />
           </div>
 
           {/* Filter header */}
@@ -194,19 +214,40 @@ export default function Home() {
           {activeFilterCount > 0 && (
             <div className="flex flex-wrap gap-1.5 mb-4 pb-4 border-b border-border">
               {state.inStock && (
-                <FilterPill label="In Stock" onRemove={() => setInStock(undefined)} />
+                <FilterPill
+                  label="In Stock"
+                  onRemove={() => setInStock(undefined)}
+                />
               )}
               {state.vendors.map((v) => (
-                <FilterPill key={v} label={v} onRemove={() => setVendors(state.vendors.filter((i) => i !== v))} />
+                <FilterPill
+                  key={v}
+                  label={v}
+                  onRemove={() =>
+                    setVendors(state.vendors.filter((i) => i !== v))
+                  }
+                />
               ))}
               {state.categories.map((c) => (
-                <FilterPill key={c} label={c} onRemove={() => setCategories(state.categories.filter((i) => i !== c))} />
+                <FilterPill
+                  key={c}
+                  label={c}
+                  onRemove={() =>
+                    setCategories(state.categories.filter((i) => i !== c))
+                  }
+                />
               ))}
               {state.minPrice !== undefined && (
-                <FilterPill label={`Min £${state.minPrice}`} onRemove={() => setMinPrice(undefined)} />
+                <FilterPill
+                  label={`Min £${state.minPrice}`}
+                  onRemove={() => setMinPrice(undefined)}
+                />
               )}
               {state.maxPrice !== undefined && (
-                <FilterPill label={`Max £${state.maxPrice}`} onRemove={() => setMaxPrice(undefined)} />
+                <FilterPill
+                  label={`Max £${state.maxPrice}`}
+                  onRemove={() => setMaxPrice(undefined)}
+                />
               )}
             </div>
           )}
@@ -232,14 +273,21 @@ export default function Home() {
         {isError ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center p-8 border border-destructive/20 bg-destructive/5 rounded-xl">
             <AlertCircle className="w-10 h-10 text-destructive mb-4" />
-            <h2 className="text-lg font-semibold text-destructive mb-2">Failed to load catalog</h2>
+            <h2 className="text-lg font-semibold text-destructive mb-2">
+              Failed to load catalog
+            </h2>
             <p className="text-sm text-muted-foreground mb-4 max-w-md">
-              There was a problem communicating with the server. Please try again.
+              There was a problem communicating with the server. Please try
+              again.
             </p>
             <Button
               variant="outline"
               className="gap-2"
-              onClick={() => { setLoading(true); setIsError(false); setRetryKey((k) => k + 1); }}
+              onClick={() => {
+                setLoading(true);
+                setIsError(false);
+                setRetryKey((k) => k + 1);
+              }}
               data-testid="button-retry"
             >
               <RefreshCcw className="w-4 h-4" /> Retry
@@ -254,11 +302,14 @@ export default function Home() {
                   <Skeleton className="h-6 w-36" />
                 ) : result ? (
                   <h2 className="text-base font-semibold text-foreground tabular-nums">
-                    {result.total.toLocaleString()} result{result.total !== 1 ? "s" : ""}
+                    {result.total.toLocaleString()} result
+                    {result.total !== 1 ? "s" : ""}
                   </h2>
                 ) : null}
                 {isPlaceholder && (
-                  <span className="text-xs text-muted-foreground animate-pulse">Updating…</span>
+                  <span className="text-xs text-muted-foreground animate-pulse">
+                    Updating…
+                  </span>
                 )}
               </div>
               <div className="flex items-center gap-2 shrink-0">
@@ -270,16 +321,19 @@ export default function Home() {
             {/* Grid */}
             {loading && !result ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {Array(8).fill(0).map((_, i) => (
-                  <ProductCardSkeleton key={i} />
-                ))}
+                {Array(8)
+                  .fill(0)
+                  .map((_, i) => (
+                    <ProductCardSkeleton key={i} />
+                  ))}
               </div>
             ) : products.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center p-12 text-center border rounded-xl border-dashed border-border">
                 <PackageX className="w-12 h-12 text-muted-foreground/40 mb-4" />
                 <h3 className="text-lg font-medium mb-1">No products found</h3>
                 <p className="text-muted-foreground text-sm max-w-sm">
-                  We couldn&apos;t find anything matching your filters. Try adjusting your search or clearing some criteria.
+                  We couldn&apos;t find anything matching your filters. Try
+                  adjusting your search or clearing some criteria.
                 </p>
                 <Button
                   variant="outline"
@@ -295,7 +349,11 @@ export default function Home() {
                 <ProductGrid
                   products={products}
                   searchQuery={debouncedQuery}
-                  className={isPlaceholder ? "opacity-50 pointer-events-none" : "opacity-100"}
+                  className={
+                    isPlaceholder
+                      ? "opacity-50 pointer-events-none"
+                      : "opacity-100"
+                  }
                 />
 
                 {/* Pagination */}
@@ -303,17 +361,27 @@ export default function Home() {
                   <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-border pt-6">
                     <p className="text-sm text-muted-foreground order-2 sm:order-1">
                       Page{" "}
-                      <span className="font-medium text-foreground">{result.page}</span>
-                      {" "}of{" "}
-                      <span className="font-medium text-foreground">{result.totalPages}</span>
-                      {" "}·{" "}
-                      <span className="font-medium text-foreground">{result.total.toLocaleString()}</span> total
+                      <span className="font-medium text-foreground">
+                        {result.page}
+                      </span>{" "}
+                      of{" "}
+                      <span className="font-medium text-foreground">
+                        {result.totalPages}
+                      </span>{" "}
+                      ·{" "}
+                      <span className="font-medium text-foreground">
+                        {result.total.toLocaleString()}
+                      </span>{" "}
+                      total
                     </p>
                     <div className="flex gap-2 order-1 sm:order-2">
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => { setPage(Math.max(1, state.page - 1)); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                        onClick={() => {
+                          setPage(Math.max(1, state.page - 1));
+                          window.scrollTo({ top: 0, behavior: "smooth" });
+                        }}
                         disabled={state.page <= 1}
                         data-testid="button-prev-page"
                         className="gap-1.5"
@@ -323,7 +391,10 @@ export default function Home() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => { setPage(Math.min(result.totalPages, state.page + 1)); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                        onClick={() => {
+                          setPage(Math.min(result.totalPages, state.page + 1));
+                          window.scrollTo({ top: 0, behavior: "smooth" });
+                        }}
                         disabled={state.page >= result.totalPages}
                         data-testid="button-next-page"
                         className="gap-1.5"
