@@ -1,12 +1,16 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import DarkModeToggle from "../components/DarkModeToggle";
+import FacetLogo from "../components/FacetLogo";
 import { getProductStore } from "@/lib/product-store";
 
 export const metadata: Metadata = {
-  title: "HealthCatalog — Healf Product Search",
+  title: "FACET — Multi-Faceted Product Search",
   description:
-    "Search 4,600+ health & wellness products from the Healf catalogue.",
+    "Search 4,600+ health & wellness products with precision multi-faceted filtering on FACET.",
+  icons: {
+    icon: "/icon.svg",
+  },
 };
 
 export default function RootLayout({
@@ -38,28 +42,9 @@ export default function RootLayout({
             {/* Logo */}
             <a
               href="/"
-              className="flex items-center gap-2.5 group outline-none"
+              className="flex items-center gap-2.5 group outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-lg"
             >
-              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary text-primary-foreground shadow-sm">
-                {/* Lucide Pill icon (inline SVG so no import needed in server component) */}
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z" />
-                  <path d="M8.5 8.5 16 16" />
-                </svg>
-              </div>
-              <span className="font-display font-semibold tracking-tight text-lg group-hover:text-primary transition-colors">
-                HealthCatalog
-              </span>
+              <FacetLogo />
             </a>
 
             {/* Right nav */}

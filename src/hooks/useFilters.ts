@@ -4,7 +4,6 @@ export type FiltersState = {
   q: string;
   vendors: string[];
   categories: string[];
-  tags: string[];
   minPrice?: number;
   maxPrice?: number;
   inStock?: boolean;
@@ -22,7 +21,6 @@ export function useFilters() {
   const [q, setQ] = useState("");
   const [vendors, setVendors] = useState<string[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
-  const [tags, setTags] = useState<string[]>([]);
   const [minPrice, setMinPrice] = useState<number | undefined>(undefined);
   const [maxPrice, setMaxPrice] = useState<number | undefined>(undefined);
   const [inStock, setInStock] = useState<boolean | undefined>(undefined);
@@ -35,7 +33,6 @@ export function useFilters() {
     const qParam = params.get("q") || "";
     const vendorsParam = params.getAll("vendors");
     const categoriesParam = params.getAll("categories");
-    const tagsParam = params.getAll("tags");
     const minParam = params.get("minPrice");
     const maxParam = params.get("maxPrice");
     const inStockParam = params.get("inStock");
@@ -45,7 +42,6 @@ export function useFilters() {
     setQ(qParam);
     setVendors(vendorsParam || []);
     setCategories(categoriesParam || []);
-    setTags(tagsParam || []);
     setMinPrice(minParam ? Number(minParam) : undefined);
     setMaxPrice(maxParam ? Number(maxParam) : undefined);
     setInStock(
@@ -67,7 +63,6 @@ export function useFilters() {
     if (vendors.length) vendors.forEach((v) => params.append("vendors", v));
     if (categories.length)
       categories.forEach((c) => params.append("categories", c));
-    if (tags.length) tags.forEach((t) => params.append("tags", t));
     if (minPrice !== undefined) params.set("minPrice", String(minPrice));
     if (maxPrice !== undefined) params.set("maxPrice", String(maxPrice));
     if (inStock !== undefined) params.set("inStock", String(inStock));
@@ -76,21 +71,20 @@ export function useFilters() {
 
     const newUrl = `${window.location.pathname}?${params.toString()}`;
     window.history.replaceState({}, "", newUrl);
-  }, [q, vendors, categories, tags, minPrice, maxPrice, inStock, sort, page]);
+  }, [q, vendors, categories, minPrice, maxPrice, inStock, sort, page]);
 
   const state = useMemo<FiltersState>(
     () => ({
       q,
       vendors,
       categories,
-      tags,
       minPrice,
       maxPrice,
       inStock,
       sort,
       page,
     }),
-    [q, vendors, categories, tags, minPrice, maxPrice, inStock, sort, page],
+    [q, vendors, categories, minPrice, maxPrice, inStock, sort, page],
   );
 
   return {
@@ -98,7 +92,6 @@ export function useFilters() {
     setQ,
     setVendors,
     setCategories,
-    setTags,
     setMinPrice,
     setMaxPrice,
     setInStock,

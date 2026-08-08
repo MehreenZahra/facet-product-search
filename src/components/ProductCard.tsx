@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { Product } from "@/types/product";
 import { Package } from "lucide-react";
+import { highlightText } from "@/lib/highlight";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/utils";
@@ -68,7 +69,7 @@ export function ProductCard({ product, searchQuery = "" }: ProductCardProps) {
         <div className="flex items-start justify-between gap-2">
           <Link href={`/products/${product.id}`} className="hover:underline outline-none focus-visible:underline min-w-0">
             <h3 className="font-semibold text-base leading-snug line-clamp-2 text-foreground">
-              {product.title}
+              {searchQuery ? highlightText(product.title, searchQuery) : product.title}
             </h3>
           </Link>
           <div className="font-bold whitespace-nowrap text-primary shrink-0 text-sm mt-0.5">
