@@ -94,12 +94,7 @@ export default function ProductPage(props: PageProps) {
     .slice(0, 4);
 
   const handleBack = () => {
-    if (
-      typeof window !== "undefined" &&
-      window.history.length > 1 &&
-      document.referrer &&
-      document.referrer.startsWith(window.location.origin)
-    ) {
+    if (typeof window !== "undefined" && window.history.length > 1) {
       router.back();
     } else {
       router.push("/");
