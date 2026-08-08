@@ -8,6 +8,9 @@ export const metadata: Metadata = {
   title: "FACET — Multi-Faceted Product Search",
   description:
     "Search 4,600+ health & wellness products with precision multi-faceted filtering on FACET.",
+  icons: {
+    icon: "/icon.svg",
+  },
 };
 
 export default function RootLayout({

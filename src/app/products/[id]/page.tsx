@@ -230,7 +230,7 @@ export default function ProductPage(props: PageProps) {
                 rel="noreferrer"
                 className="inline-flex items-center gap-1 text-primary hover:underline font-medium"
               >
-                View on Healf <ExternalLink className="w-3 h-3" />
+                View Original Product <ExternalLink className="w-3 h-3" />
               </a>
             )}
           </div>
