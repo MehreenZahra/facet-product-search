@@ -26,6 +26,21 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
+function formatTextContent(text: string | undefined): string {
+  if (!text) return "";
+  return text
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/p>/gi, "\n")
+    .replace(/<p[^>]*>/gi, "")
+    .replace(/<\/li>/gi, "\n")
+    .replace(/<li[^>]*>/gi, "• ")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/\\n/g, "\n")
+    .replace(/\n\s*\n+/g, "\n")
+    .trim();
+}
+
 export default function ProductPage(props: PageProps) {
   const params = use(props.params);
   const [product, setProduct] = useState<Product | null>(null);
@@ -179,9 +194,13 @@ export default function ProductPage(props: PageProps) {
           </div>
 
           {/* Description */}
-          <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground mb-8">
-            <p className="leading-relaxed">{product.description}</p>
-          </div>
+          {product.description && (
+            <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground mb-8">
+              <p className="leading-relaxed whitespace-pre-line">
+                {formatTextContent(product.description)}
+              </p>
+            </div>
+          )}
 
           {/* Metafields */}
           {product.metafields?.ingredients && (
@@ -189,8 +208,8 @@ export default function ProductPage(props: PageProps) {
               <h3 className="font-semibold text-foreground mb-1">
                 Ingredients
               </h3>
-              <p className="text-muted-foreground">
-                {product.metafields.ingredients}
+              <p className="text-muted-foreground whitespace-pre-line leading-relaxed">
+                {formatTextContent(product.metafields.ingredients)}
               </p>
             </div>
           )}
@@ -199,8 +218,8 @@ export default function ProductPage(props: PageProps) {
               <h3 className="font-semibold text-foreground mb-1">
                 Suggested Use
               </h3>
-              <p className="text-muted-foreground">
-                {product.metafields.suggestedUse}
+              <p className="text-muted-foreground whitespace-pre-line leading-relaxed">
+                {formatTextContent(product.metafields.suggestedUse)}
               </p>
             </div>
           )}
