@@ -6,6 +6,8 @@ import {
   CircleDollarSign,
   Building2,
   Layers,
+  Search,
+  X,
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
@@ -61,6 +63,8 @@ export function FilterPanel({
 }: FilterPanelProps) {
   const [vendors, setVendors] = useState<{ name: string; count: number }[] | null>(null);
   const [categories, setCategories] = useState<{ name: string; count: number }[] | null>(null);
+  const [brandSearch, setBrandSearch] = useState("");
+  const [categorySearch, setCategorySearch] = useState("");
 
   useEffect(() => {
     fetch("/api/products/vendors")
@@ -99,6 +103,40 @@ export function FilterPanel({
   function toggle(list: string[], setList: (s: string[]) => void, item: string) {
     setList(list.includes(item) ? list.filter((i) => i !== item) : [...list, item]);
   }
+
+  // Filter and sort vendors (pinned selected first)
+  const filteredVendors = vendors
+    ? vendors.filter((v) =>
+        v.name.toLowerCase().includes(brandSearch.trim().toLowerCase())
+      )
+    : null;
+
+  const sortedVendors = filteredVendors
+    ? [...filteredVendors].sort((a, b) => {
+        const aChecked = selectedVendors.includes(a.name);
+        const bChecked = selectedVendors.includes(b.name);
+        if (aChecked && !bChecked) return -1;
+        if (!aChecked && bChecked) return 1;
+        return 0;
+      })
+    : null;
+
+  // Filter and sort categories (pinned selected first)
+  const filteredCategories = categories
+    ? categories.filter((c) =>
+        c.name.toLowerCase().includes(categorySearch.trim().toLowerCase())
+      )
+    : null;
+
+  const sortedCategories = filteredCategories
+    ? [...filteredCategories].sort((a, b) => {
+        const aChecked = selectedCategories.includes(a.name);
+        const bChecked = selectedCategories.includes(b.name);
+        if (aChecked && !bChecked) return -1;
+        if (!aChecked && bChecked) return 1;
+        return 0;
+      })
+    : null;
 
   return (
     <div className="space-y-6">
@@ -158,43 +196,69 @@ export function FilterPanel({
         icon={<Building2 className="w-3.5 h-3.5" />}
         title={`Brands${selectedVendors.length > 0 ? ` (${selectedVendors.length})` : ""}`}
       >
-        <div className="space-y-0.5 max-h-52 overflow-y-auto pr-1 scrollbar-thin">
-          {vendors === null
-            ? Array(5).fill(0).map((_, i) => (
-                <Skeleton key={i} className="h-7 w-full rounded-md my-0.5" />
-              ))
-            : vendors.map((v) => {
-                const isChecked = selectedVendors.includes(v.name);
-                return (
-                  <label
-                    key={v.name}
-                    htmlFor={`vendor-${v.name}`}
+        {/* Search input for Brands */}
+        <div className="relative mb-2">
+          <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+          <Input
+            type="text"
+            placeholder={vendors ? `Search ${vendors.length} brands...` : "Search brands..."}
+            value={brandSearch}
+            onChange={(e) => setBrandSearch(e.target.value)}
+            className="pl-8 pr-7 h-8 text-xs bg-muted/40"
+            data-testid="input-search-brands"
+          />
+          {brandSearch && (
+            <button
+              onClick={() => setBrandSearch("")}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              aria-label="Clear brand search"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+
+        <div className="space-y-0.5 max-h-56 overflow-y-auto pr-1 scrollbar-thin">
+          {sortedVendors === null ? (
+            Array(5).fill(0).map((_, i) => (
+              <Skeleton key={i} className="h-7 w-full rounded-md my-0.5" />
+            ))
+          ) : sortedVendors.length === 0 ? (
+            <p className="text-xs text-muted-foreground py-2 text-center">No brands found</p>
+          ) : (
+            sortedVendors.map((v) => {
+              const isChecked = selectedVendors.includes(v.name);
+              return (
+                <label
+                  key={v.name}
+                  htmlFor={`vendor-${v.name}`}
+                  className={cn(
+                    "flex items-center gap-2.5 px-2 py-1.5 rounded-md cursor-pointer transition-colors select-none group",
+                    isChecked
+                      ? "bg-primary/10 text-primary font-medium"
+                      : "hover:bg-secondary/80 text-foreground"
+                  )}
+                >
+                  <Checkbox
+                    id={`vendor-${v.name}`}
+                    checked={isChecked}
+                    onCheckedChange={() => toggle(selectedVendors, setSelectedVendors, v.name)}
                     className={cn(
-                      "flex items-center gap-2.5 px-2 py-1.5 rounded-md cursor-pointer transition-colors select-none group",
-                      isChecked
-                        ? "bg-primary/8 text-primary"
-                        : "hover:bg-secondary/80 text-foreground"
+                      "shrink-0 h-3.5 w-3.5",
+                      isChecked ? "border-primary" : "border-muted-foreground/50"
                     )}
-                  >
-                    <Checkbox
-                      id={`vendor-${v.name}`}
-                      checked={isChecked}
-                      onCheckedChange={() => toggle(selectedVendors, setSelectedVendors, v.name)}
-                      className={cn(
-                        "shrink-0 h-3.5 w-3.5",
-                        isChecked ? "border-primary" : "border-muted-foreground/50"
-                      )}
-                      data-testid={`checkbox-vendor-${v.name}`}
-                    />
-                    <span className="text-sm leading-none flex-1 truncate" title={v.name}>{v.name}</span>
-                    {v.count > 0 && (
-                      <span className={cn("text-[11px] tabular-nums shrink-0", isChecked ? "text-primary/70" : "text-muted-foreground")}>
-                        {v.count}
-                      </span>
-                    )}
-                  </label>
-                );
-              })}
+                    data-testid={`checkbox-vendor-${v.name}`}
+                  />
+                  <span className="text-sm leading-none flex-1 truncate" title={v.name}>{v.name}</span>
+                  {v.count > 0 && (
+                    <span className={cn("text-[11px] tabular-nums shrink-0", isChecked ? "text-primary/70" : "text-muted-foreground")}>
+                      {v.count}
+                    </span>
+                  )}
+                </label>
+              );
+            })
+          )}
         </div>
       </FilterSection>
 
@@ -205,45 +269,72 @@ export function FilterPanel({
         icon={<Layers className="w-3.5 h-3.5" />}
         title={`Categories${selectedCategories.length > 0 ? ` (${selectedCategories.length})` : ""}`}
       >
-        <div className="space-y-0.5 max-h-52 overflow-y-auto pr-1 scrollbar-thin">
-          {categories === null
-            ? Array(4).fill(0).map((_, i) => (
-                <Skeleton key={i} className="h-7 w-full rounded-md my-0.5" />
-              ))
-            : categories.map((c) => {
-                const isChecked = selectedCategories.includes(c.name);
-                return (
-                  <label
-                    key={c.name}
-                    htmlFor={`category-${c.name}`}
+        {/* Search input for Categories */}
+        <div className="relative mb-2">
+          <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+          <Input
+            type="text"
+            placeholder={categories ? `Search ${categories.length} categories...` : "Search categories..."}
+            value={categorySearch}
+            onChange={(e) => setCategorySearch(e.target.value)}
+            className="pl-8 pr-7 h-8 text-xs bg-muted/40"
+            data-testid="input-search-categories"
+          />
+          {categorySearch && (
+            <button
+              onClick={() => setCategorySearch("")}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              aria-label="Clear category search"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+
+        <div className="space-y-0.5 max-h-56 overflow-y-auto pr-1 scrollbar-thin">
+          {sortedCategories === null ? (
+            Array(4).fill(0).map((_, i) => (
+              <Skeleton key={i} className="h-7 w-full rounded-md my-0.5" />
+            ))
+          ) : sortedCategories.length === 0 ? (
+            <p className="text-xs text-muted-foreground py-2 text-center">No categories found</p>
+          ) : (
+            sortedCategories.map((c) => {
+              const isChecked = selectedCategories.includes(c.name);
+              return (
+                <label
+                  key={c.name}
+                  htmlFor={`category-${c.name}`}
+                  className={cn(
+                    "flex items-center gap-2.5 px-2 py-1.5 rounded-md cursor-pointer transition-colors select-none group",
+                    isChecked
+                      ? "bg-primary/10 text-primary font-medium"
+                      : "hover:bg-secondary/80 text-foreground"
+                  )}
+                >
+                  <Checkbox
+                    id={`category-${c.name}`}
+                    checked={isChecked}
+                    onCheckedChange={() => toggle(selectedCategories, setSelectedCategories, c.name)}
                     className={cn(
-                      "flex items-center gap-2.5 px-2 py-1.5 rounded-md cursor-pointer transition-colors select-none group",
-                      isChecked
-                        ? "bg-primary/8 text-primary"
-                        : "hover:bg-secondary/80 text-foreground"
+                      "shrink-0 h-3.5 w-3.5",
+                      isChecked ? "border-primary" : "border-muted-foreground/50"
                     )}
-                  >
-                    <Checkbox
-                      id={`category-${c.name}`}
-                      checked={isChecked}
-                      onCheckedChange={() => toggle(selectedCategories, setSelectedCategories, c.name)}
-                      className={cn(
-                        "shrink-0 h-3.5 w-3.5",
-                        isChecked ? "border-primary" : "border-muted-foreground/50"
-                      )}
-                      data-testid={`checkbox-category-${c.name}`}
-                    />
-                    <span className="text-sm leading-none flex-1 truncate" title={c.name}>{c.name}</span>
-                    {c.count > 0 && (
-                      <span className={cn("text-[11px] tabular-nums shrink-0", isChecked ? "text-primary/70" : "text-muted-foreground")}>
-                        {c.count}
-                      </span>
-                    )}
-                  </label>
-                );
-              })}
+                    data-testid={`checkbox-category-${c.name}`}
+                  />
+                  <span className="text-sm leading-none flex-1 truncate" title={c.name}>{c.name}</span>
+                  {c.count > 0 && (
+                    <span className={cn("text-[11px] tabular-nums shrink-0", isChecked ? "text-primary/70" : "text-muted-foreground")}>
+                      {c.count}
+                    </span>
+                  )}
+                </label>
+              );
+            })
+          )}
         </div>
       </FilterSection>
     </div>
   );
 }
+

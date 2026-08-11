@@ -7,6 +7,7 @@ import { SearchBar } from "@/components/SearchBar";
 import { SortSelect } from "@/components/SortSelect";
 import { ProductGrid } from "@/components/ProductGrid";
 import { FilterPanel } from "@/components/FilterPanel";
+import { MobileFilterDrawer } from "@/components/MobileFilterDrawer";
 import { ProductCardSkeleton } from "@/components/ProductCard";
 import { Product } from "@/types/product";
 import { Button } from "@/components/ui/button";
@@ -43,7 +44,7 @@ function FilterPill({
   return (
     <button
       onClick={onRemove}
-      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
+      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
     >
       {label}
       <X className="w-3 h-3" />
@@ -54,6 +55,7 @@ function FilterPill({
 function HomeContent() {
   const [products, setProducts] = useState<Product[]>([]);
   const [result, setResult] = useState<ProductsResult | null>(null);
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const {
     state,
     setQ,
@@ -144,8 +146,66 @@ function HomeContent() {
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 flex flex-col lg:flex-row gap-6">
-      {/* ── Sidebar ─────────────────────────────────────────────────────── */}
-      <aside className="w-full lg:w-72 shrink-0">
+      {/* ── Mobile Search & Filter Toolbar (< lg) ─────────────────────────── */}
+      <div className="lg:hidden space-y-3">
+        {/* Search */}
+        <SearchBar
+          value={state.q}
+          onChange={setQ}
+          inputRef={searchInputRef}
+        />
+
+        {/* Mobile Control Row: Filter Button + Sort Dropdown */}
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            onClick={() => setIsMobileFilterOpen(true)}
+            className="flex-1 justify-between h-10 border-border bg-card hover:bg-accent text-sm"
+            data-testid="button-mobile-filter-trigger"
+          >
+            <span className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-primary" />
+              <span className="font-medium">Filters</span>
+            </span>
+            {activeFilterCount > 0 ? (
+              <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold rounded-full bg-primary text-primary-foreground">
+                {activeFilterCount}
+              </span>
+            ) : (
+              <span className="text-xs text-muted-foreground">All</span>
+            )}
+          </Button>
+
+          <div className="shrink-0">
+            <SortSelect value={state.sort} onChange={(v) => setSort(v)} />
+          </div>
+        </div>
+      </div>
+
+      {/* ── Mobile Filter Sheet Drawer ─────────────────────────────────────── */}
+      <MobileFilterDrawer
+        isOpen={isMobileFilterOpen}
+        onClose={() => setIsMobileFilterOpen(false)}
+        activeFilterCount={activeFilterCount}
+        totalResults={result ? result.total : null}
+        onClearAll={clearAll}
+      >
+        <FilterPanel
+          selectedVendors={state.vendors}
+          setSelectedVendors={setVendors}
+          selectedCategories={state.categories}
+          setSelectedCategories={setCategories}
+          minPrice={state.minPrice}
+          setMinPrice={setMinPrice}
+          maxPrice={state.maxPrice}
+          setMaxPrice={setMaxPrice}
+          inStock={state.inStock}
+          setInStock={setInStock}
+        />
+      </MobileFilterDrawer>
+
+      {/* ── Desktop Sidebar (>= lg) ───────────────────────────────────────── */}
+      <aside className="hidden lg:block lg:w-72 shrink-0">
         <div className="sticky top-6 space-y-1">
           {/* Search */}
           <div className="mb-5">
@@ -176,48 +236,6 @@ function HomeContent() {
               </button>
             )}
           </div>
-
-          {/* Active filter pills */}
-          {activeFilterCount > 0 && (
-            <div className="flex flex-wrap gap-1.5 mb-4 pb-4 border-b border-border">
-              {state.inStock && (
-                <FilterPill
-                  label="In Stock"
-                  onRemove={() => setInStock(undefined)}
-                />
-              )}
-              {state.vendors.map((v) => (
-                <FilterPill
-                  key={v}
-                  label={v}
-                  onRemove={() =>
-                    setVendors(state.vendors.filter((i) => i !== v))
-                  }
-                />
-              ))}
-              {state.categories.map((c) => (
-                <FilterPill
-                  key={c}
-                  label={c}
-                  onRemove={() =>
-                    setCategories(state.categories.filter((i) => i !== c))
-                  }
-                />
-              ))}
-              {state.minPrice !== undefined && (
-                <FilterPill
-                  label={`Min £${state.minPrice}`}
-                  onRemove={() => setMinPrice(undefined)}
-                />
-              )}
-              {state.maxPrice !== undefined && (
-                <FilterPill
-                  label={`Max £${state.maxPrice}`}
-                  onRemove={() => setMaxPrice(undefined)}
-                />
-              )}
-            </div>
-          )}
 
           {/* Filter panel */}
           <FilterPanel
@@ -263,7 +281,7 @@ function HomeContent() {
         ) : (
           <>
             {/* Results header */}
-            <div className="flex items-center justify-between gap-4 mb-5">
+            <div className="flex items-center justify-between gap-4 mb-3">
               <div className="flex items-center gap-3 min-w-0">
                 {loading && !result ? (
                   <Skeleton className="h-6 w-36" />
@@ -279,11 +297,61 @@ function HomeContent() {
                   </span>
                 )}
               </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <ArrowUpDown className="w-3.5 h-3.5 text-muted-foreground hidden sm:block" />
+              <div className="hidden lg:flex items-center gap-2 shrink-0">
+                <ArrowUpDown className="w-3.5 h-3.5 text-muted-foreground" />
                 <SortSelect value={state.sort} onChange={(v) => setSort(v)} />
               </div>
             </div>
+
+            {/* Active filter pills (positioned right above product grid) */}
+            {activeFilterCount > 0 && (
+              <div className="flex flex-wrap items-center gap-1.5 mb-5 pb-3 border-b border-border">
+                <span className="text-xs text-muted-foreground font-medium mr-1">Active:</span>
+                {state.inStock && (
+                  <FilterPill
+                    label="In Stock"
+                    onRemove={() => setInStock(undefined)}
+                  />
+                )}
+                {state.vendors.map((v) => (
+                  <FilterPill
+                    key={v}
+                    label={v}
+                    onRemove={() =>
+                      setVendors(state.vendors.filter((i) => i !== v))
+                    }
+                  />
+                ))}
+                {state.categories.map((c) => (
+                  <FilterPill
+                    key={c}
+                    label={c}
+                    onRemove={() =>
+                      setCategories(state.categories.filter((i) => i !== c))
+                    }
+                  />
+                ))}
+                {state.minPrice !== undefined && (
+                  <FilterPill
+                    label={`Min £${state.minPrice}`}
+                    onRemove={() => setMinPrice(undefined)}
+                  />
+                )}
+                {state.maxPrice !== undefined && (
+                  <FilterPill
+                    label={`Max £${state.maxPrice}`}
+                    onRemove={() => setMaxPrice(undefined)}
+                  />
+                )}
+                <button
+                  onClick={clearAll}
+                  className="text-xs text-primary hover:underline font-medium ml-1 flex items-center gap-1"
+                >
+                  <X className="w-3 h-3" /> Clear all
+                </button>
+              </div>
+            )}
+
 
             {/* Grid */}
             {loading && !result ? (
