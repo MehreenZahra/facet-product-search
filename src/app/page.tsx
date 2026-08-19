@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useRef, Suspense } from "react";
-import { useDebounce } from "@/hooks/useDebounce";
 import { useFilters } from "@/hooks/useFilters";
 import { SearchBar } from "@/components/SearchBar";
 import { SortSelect } from "@/components/SortSelect";
@@ -9,9 +8,9 @@ import { ProductGrid } from "@/components/ProductGrid";
 import { FilterPanel } from "@/components/FilterPanel";
 import { MobileFilterDrawer } from "@/components/MobileFilterDrawer";
 import { ProductCardSkeleton } from "@/components/ProductCard";
-import { Product } from "@/types/product";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Product } from "@/types/product";
 import {
   Filter,
   X,
@@ -72,7 +71,6 @@ function HomeContent() {
   const [isPlaceholder, setIsPlaceholder] = useState(false);
   const [isError, setIsError] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
-  const debouncedQuery = useDebounce(state.q, 300);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   // ── Keyboard shortcut: press "/" to focus search ─────────────────────────
@@ -92,7 +90,7 @@ function HomeContent() {
     setIsPlaceholder(true);
     const searchParams = new URLSearchParams();
 
-    if (debouncedQuery.trim()) searchParams.set("q", debouncedQuery);
+    if (state.q.trim()) searchParams.set("q", state.q);
     if (state.sort && state.sort !== "relevance")
       searchParams.set("sort", state.sort);
     state.vendors.forEach((v) => searchParams.append("vendors", v));
@@ -123,7 +121,7 @@ function HomeContent() {
       })
       .finally(() => setIsPlaceholder(false));
   }, [
-    debouncedQuery,
+    state.q,
     state.sort,
     state.page,
     state.vendors,
@@ -142,18 +140,14 @@ function HomeContent() {
     (state.minPrice !== undefined ? 1 : 0) +
     (state.maxPrice !== undefined ? 1 : 0);
 
-  const hasActive = activeFilterCount > 0 || !!debouncedQuery;
+  const hasActive = activeFilterCount > 0 || !!state.q;
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 flex flex-col lg:flex-row gap-6">
       {/* ── Mobile Search & Filter Toolbar (< lg) ─────────────────────────── */}
       <div className="lg:hidden space-y-3">
         {/* Search */}
-        <SearchBar
-          value={state.q}
-          onChange={setQ}
-          inputRef={searchInputRef}
-        />
+        <SearchBar value={state.q} onChange={setQ} inputRef={searchInputRef} />
 
         {/* Mobile Control Row: Filter Button + Sort Dropdown */}
         <div className="flex items-center gap-3">
@@ -306,7 +300,9 @@ function HomeContent() {
             {/* Active filter pills (positioned right above product grid) */}
             {activeFilterCount > 0 && (
               <div className="flex flex-wrap items-center gap-1.5 mb-5 pb-3 border-b border-border">
-                <span className="text-xs text-muted-foreground font-medium mr-1">Active:</span>
+                <span className="text-xs text-muted-foreground font-medium mr-1">
+                  Active:
+                </span>
                 {state.inStock && (
                   <FilterPill
                     label="In Stock"
@@ -352,7 +348,6 @@ function HomeContent() {
               </div>
             )}
 
-
             {/* Grid */}
             {loading && !result ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -383,7 +378,7 @@ function HomeContent() {
               <>
                 <ProductGrid
                   products={products}
-                  searchQuery={debouncedQuery}
+                  searchQuery={state.q}
                   className={
                     isPlaceholder
                       ? "opacity-50 pointer-events-none"
