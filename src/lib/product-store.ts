@@ -6,6 +6,8 @@ class ProductStore {
   private productsById: Map<string, Product> = new Map();
   private vendors: string[] = [];
   private categories: string[] = [];
+  private vendorCounts: { vendor: string; count: number }[] = [];
+  private categoryCounts: { category: string; count: number }[] = [];
   private initialized = false;
 
   public initialize() {
@@ -13,19 +15,31 @@ class ProductStore {
 
     this.products = loadProducts();
 
-    // Extract unique vendors
-    const vendorSet = new Set<string>();
-    const categorySet = new Set<string>();
+    // Build all indexes and caches in a single pass
+    const vendorCountMap = new Map<string, number>();
+    const categoryCountMap = new Map<string, number>();
 
     for (const p of this.products) {
-      if (p.vendor) vendorSet.add(p.vendor);
-      if (p.category) categorySet.add(p.category);
       this.productsById.set(p.id, p);
+      if (p.vendor) {
+        vendorCountMap.set(p.vendor, (vendorCountMap.get(p.vendor) ?? 0) + 1);
+      }
+      if (p.category) {
+        categoryCountMap.set(p.category, (categoryCountMap.get(p.category) ?? 0) + 1);
+      }
     }
 
-    // Sort alphabetically
-    this.vendors = Array.from(vendorSet).sort();
-    this.categories = Array.from(categorySet).sort();
+    // Sort alphabetically and cache
+    this.vendors = Array.from(vendorCountMap.keys()).sort();
+    this.categories = Array.from(categoryCountMap.keys()).sort();
+
+    this.vendorCounts = Array.from(vendorCountMap.entries())
+      .map(([vendor, count]) => ({ vendor, count }))
+      .sort((a, b) => a.vendor.localeCompare(b.vendor));
+
+    this.categoryCounts = Array.from(categoryCountMap.entries())
+      .map(([category, count]) => ({ category, count }))
+      .sort((a, b) => a.category.localeCompare(b.category));
 
     this.initialized = true;
     console.log(
@@ -41,7 +55,6 @@ class ProductStore {
   public getProductById(id: string): Product | undefined {
     this.initialize();
     return this.productsById.get(id);
-
   }
 
   public getVendors(): string[] {
@@ -56,26 +69,12 @@ class ProductStore {
 
   public getVendorCounts(): { vendor: string; count: number }[] {
     this.initialize();
-    const counts = new Map<string, number>();
-    for (const product of this.products) {
-      if (!product.vendor) continue;
-      counts.set(product.vendor, (counts.get(product.vendor) ?? 0) + 1);
-    }
-    return Array.from(counts.entries())
-      .map(([vendor, count]) => ({ vendor, count }))
-      .sort((a, b) => a.vendor.localeCompare(b.vendor));
+    return this.vendorCounts;
   }
 
   public getCategoryCounts(): { category: string; count: number }[] {
     this.initialize();
-    const counts = new Map<string, number>();
-    for (const product of this.products) {
-      if (!product.category) continue;
-      counts.set(product.category, (counts.get(product.category) ?? 0) + 1);
-    }
-    return Array.from(counts.entries())
-      .map(([category, count]) => ({ category, count }))
-      .sort((a, b) => a.category.localeCompare(b.category));
+    return this.categoryCounts;
   }
 }
 
