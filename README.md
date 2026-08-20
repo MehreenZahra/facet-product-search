@@ -16,6 +16,7 @@ A production-grade product search application providing fast, faceted product di
 - [Search Algorithm](#search-algorithm)
 - [API Reference](#api-reference)
 - [UI & Feature Overview](#ui--feature-overview)
+- [Mobile Filter UX & Large Dataset Optimization](#mobile-filter-ux--large-dataset-optimization)
 - [Trade-offs](#trade-offs)
 - [What Breaks at 500,000 Products](#what-breaks-at-500000-products)
 - [What I Would Improve With Another Week](#what-i-would-improve-with-another-week)
@@ -104,7 +105,8 @@ healf-product-search/
 │   │               └── route.ts  # GET /api/products/categories
 │   ├── components/
 │   │   ├── SearchBar.tsx         # Search input with Lucide icon + ref for "/" shortcut
-│   │   ├── FilterPanel.tsx       # Sidebar: availability toggle, price range, brands, categories
+│   │   ├── FilterPanel.tsx       # Sidebar: availability toggle, price range, brands, categories (with in-panel search)
+│   │   ├── MobileFilterDrawer.tsx# Mobile slide-over bottom sheet with live count CTA button
 │   │   ├── SortSelect.tsx        # Sort dropdown (relevance, price, name)
 │   │   ├── ProductCard.tsx       # Card with image fallback, out-of-stock badge, highlight
 │   │   ├── ProductGrid.tsx       # Responsive grid wrapper
@@ -343,6 +345,51 @@ Client-side toggle (`DarkModeToggle.tsx`) using Lucide Sun/Moon icons. Theme pre
 
 ---
 
+## Mobile Filter UX & Large Dataset Optimization
+
+### Problem Statement
+
+When building a multi-faceted search interface for a large catalog (**4,587 products** across **150+ Brands** and **100+ Categories**), standard filter layouts create severe UX bottlenecks on mobile devices:
+
+1. **Products Pushed "Below the Fold":** Stacking 250+ inline filter checkboxes above the product grid on small screens forces mobile users to scroll down 600px+ before seeing a single product card.
+2. **Scroll Fatigue & Scanning Difficulty:** Scrolling through 150+ brand checkboxes inside a small scroll area creates cognitive overload and poor discoverability.
+3. **Lost Active Choices:** Users lose track of which checkboxes were checked while scrolling through long brand/category lists.
+
+### Applied UX Solution
+
+To solve these challenges while preserving all backend search and URL-sync state logic, we implemented a 3-part responsive solution:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│ 🔍 Search products...                         [ ☀️ Light ] │
+├─────────────────────────────────────────────────────────┤
+│ ⚙️ Filters (2)   │   Sort: Featured ▾                    │
+├─────────────────────────────────────────────────────────┤
+│ 📍 ACTIVE FILTER PILLS BAR (Directly above products):    │
+│ [ 🏷️ Alice Mushrooms ✕ ]  [ 🏷️ In Stock ✕ ]  [ Clear all ]│
+├─────────────────────────────────────────────────────────┤
+│ 📦 PRODUCT GRID                                          │
+│ ┌──────────────────────┐   ┌──────────────────────┐     │
+│ │ Product Card 1       │   │ Product Card 2       │     │
+│ └──────────────────────┘   └──────────────────────┘     │
+└─────────────────────────────────────────────────────────┘
+```
+
+1. **Mobile Bottom Sheet Drawer (`MobileFilterDrawer.tsx`):**
+   - On mobile screens (`< lg`), the long filter panel is hidden from the page flow so **product results appear immediately on page load**.
+   - A sticky mobile control bar provides a **`[ ⚙️ Filters (N) ]`** button that slides up a sleek bottom sheet drawer.
+   - Includes a floating action button **`[ Show 42 Products ]`** that updates dynamically as filters are checked.
+
+2. **In-Panel Search & Pinned Selections (`FilterPanel.tsx`):**
+   - Instant search inputs (`[ 🔍 Search 150+ brands... ]` and `[ 🔍 Search 100+ categories... ]`) allow real-time filtering of long lists as the user types.
+   - Any checked brand or category is **automatically pinned to the top of the list** with a highlighted background so active choices are never lost.
+
+3. **Active Filter Pills Bar Placement (`page.tsx`):**
+   - Applied filter pills (`[ 🏷️ Alice Mushrooms ✕ ] [ 🏷️ In Stock ✕ ] [ Clear all ]`) are rendered **directly above the product result grid header**.
+   - Users can instantly see active criteria and remove any single filter with a single tap (`✕`) directly from the product view.
+
+---
+
 ## Trade-offs
 
 ### Chose: In-memory array scan · Over: Inverted index / full-text engine
@@ -418,7 +465,7 @@ Client-side toggle (`DarkModeToggle.tsx`) using Lucide Sun/Moon icons. Theme pre
 
 - **Fuzzy search:** Add Levenshtein distance matching for typo tolerance ("magneisum" → "magnesium"). Either custom implementation or integrate Fuse.js.
 - **Favourites:** `localStorage`-backed "Save for later" with a heart icon on each card. The `useRecentlyViewed` pattern can be reused directly.
-- **Mobile filter drawer:** Replace the always-visible sidebar with a slide-out drawer on mobile. The sidebar currently pushes content on small screens.
+- **Mobile filter drawer:** *(Completed)* Implemented responsive bottom sheet drawer (`MobileFilterDrawer.tsx`) with in-panel brand/category search and pinned selections.
 - **Infinite scroll option:** Add infinite scroll as an alternative to pagination, using Intersection Observer.
 - **Analytics:** Track search queries, filter usage, and product clicks to understand user intent and improve the category heuristic.
 
@@ -426,7 +473,7 @@ Client-side toggle (`DarkModeToggle.tsx`) using Lucide Sun/Moon icons. Theme pre
 ### Code Quality
 
 - **Automated tests:** Jest unit tests for `searchProducts()`, `applyFilters()`, and `getDerivedCategory()`. Playwright E2E tests for the search-filter-paginate flow.
-- **Error boundaries:** React error boundaries around the product grid and detail page to catch rendering failures gracefully.
+- **Error boundaries:** React Error boundaries around the product grid and detail page to catch rendering failures gracefully.
 - **Accessibility audit:** Full WCAG 2.1 AA compliance — focus management, ARIA labels on filter controls, screen reader announcements for result count changes.
 
 ---
@@ -434,3 +481,4 @@ Client-side toggle (`DarkModeToggle.tsx`) using Lucide Sun/Moon icons. Theme pre
 ## License
 
 Built for the North Foundry engineering assessment.
+
