@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo} from "react";
 import {
   CheckCircle2,
   CircleDollarSign,
@@ -103,40 +103,35 @@ export function FilterPanel({
   function toggle(list: string[], setList: (s: string[]) => void, item: string) {
     setList(list.includes(item) ? list.filter((i) => i !== item) : [...list, item]);
   }
-
-  // Filter and sort vendors (pinned selected first)
-  const filteredVendors = vendors
-    ? vendors.filter((v) =>
-        v.name.toLowerCase().includes(brandSearch.trim().toLowerCase())
-      )
-    : null;
-
-  const sortedVendors = filteredVendors
-    ? [...filteredVendors].sort((a, b) => {
-        const aChecked = selectedVendors.includes(a.name);
-        const bChecked = selectedVendors.includes(b.name);
-        if (aChecked && !bChecked) return -1;
-        if (!aChecked && bChecked) return 1;
-        return 0;
-      })
-    : null;
-
-  // Filter and sort categories (pinned selected first)
-  const filteredCategories = categories
-    ? categories.filter((c) =>
-        c.name.toLowerCase().includes(categorySearch.trim().toLowerCase())
-      )
-    : null;
-
-  const sortedCategories = filteredCategories
-    ? [...filteredCategories].sort((a, b) => {
-        const aChecked = selectedCategories.includes(a.name);
-        const bChecked = selectedCategories.includes(b.name);
-        if (aChecked && !bChecked) return -1;
-        if (!aChecked && bChecked) return 1;
-        return 0;
-      })
-    : null;
+  
+  // Memoized vendor list calculation
+const sortedVendors = useMemo(() => {
+  if (!vendors) return null;
+  const query = brandSearch.trim().toLowerCase();
+  return vendors
+    .filter((v) => v.name.toLowerCase().includes(query))
+    .sort((a, b) => {
+      const aChecked = selectedVendors.includes(a.name);
+      const bChecked = selectedVendors.includes(b.name);
+      if (aChecked && !bChecked) return -1;
+      if (!aChecked && bChecked) return 1;
+      return 0;
+    });
+}, [vendors, brandSearch, selectedVendors]);
+// Memoized category list calculation
+const sortedCategories = useMemo(() => {
+  if (!categories) return null;
+  const query = categorySearch.trim().toLowerCase();
+  return categories
+    .filter((c) => c.name.toLowerCase().includes(query))
+    .sort((a, b) => {
+      const aChecked = selectedCategories.includes(a.name);
+      const bChecked = selectedCategories.includes(b.name);
+      if (aChecked && !bChecked) return -1;
+      if (!aChecked && bChecked) return 1;
+      return 0;
+    });
+}, [categories, categorySearch, selectedCategories]);
 
   return (
     <div className="space-y-6">
