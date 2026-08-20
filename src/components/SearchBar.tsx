@@ -1,7 +1,7 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { SearchInput } from "@/components/ui/search-input";
-import { useDebounce } from "@/hooks/useDebounce";
+
 interface SearchBarProps {
   value: string;
   onChange: (value: string) => void;
@@ -10,19 +10,31 @@ interface SearchBarProps {
 
 export function SearchBar({ value, onChange, inputRef }: SearchBarProps) {
   const [localValue, setLocalValue] = useState(value);
-  const debouncedValue = useDebounce(localValue, 400);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange; // always fresh, no effect needed to keep it updated
 
-  // Stay in sync if the value changes from outside (e.g. "Clear all", back navigation)
+  // Sync when the URL changes from outside (Clear All, back navigation)
   useEffect(() => {
     setLocalValue(value);
   }, [value]);
 
-  // Only tell the parent once typing has paused
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setLocalValue(newValue);
+
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => {
+      onChangeRef.current(newValue);
+    }, 400);
+  };
+
+  // Clean up any pending timer if the component unmounts mid-typing
   useEffect(() => {
-    if (debouncedValue !== value) {
-      onChange(debouncedValue);
-    }
-  }, [debouncedValue]);
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
 
   return (
     <SearchInput
@@ -32,7 +44,7 @@ export function SearchBar({ value, onChange, inputRef }: SearchBarProps) {
       placeholder="Search catalog… (/)"
       value={localValue}
       maxLength={50}
-      onChange={(e) => setLocalValue(e.target.value)}
+      onChange={handleChange}
       data-testid="input-search"
     />
   );
